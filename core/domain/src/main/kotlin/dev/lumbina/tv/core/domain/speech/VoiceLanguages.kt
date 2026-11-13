@@ -67,19 +67,27 @@ class VoiceLanguages @Inject constructor(
      * Lumbina's language just chosen ([language], null: the device's; it was [previous]) becomes the
      * one voice listens for, when it has a model: the default one followed the device and was read
      * before the choice. Only while voice's languages are still not the user's own: the defaults,
-     * or the one an earlier choice of Lumbina's language gave.
+     * or the one an earlier choice of Lumbina's language gave. True when voice follows it now.
      */
-    suspend fun followAppLanguage(language: String?, previous: String?) {
-        val tag = language?.substringBefore('-') ?: return
-        if (models.catalog.none { it.language == tag }) return
+    suspend fun followAppLanguage(language: String?, previous: String?): Boolean {
+        val tag = language?.substringBefore('-') ?: return false
+        if (models.catalog.none { it.language == tag }) return false
         val followed = previous?.substringBefore('-')?.let(::listOf)
+        var follows = false
         settings.update {
             if (it.languages != defaults.get() && it.languages != followed) {
                 it
             } else {
+                follows = true
                 it.copy(languages = listOf(tag), mode = VoiceLanguageMode.Auto)
             }
         }
+        return follows
+    }
+
+    /** As [followAppLanguage], and the model of the language followed is downloaded at once. */
+    suspend fun followAppLanguageAndDownload(language: String?, previous: String?) {
+        if (followAppLanguage(language, previous)) language?.substringBefore('-')?.let(models::install)
     }
 
     suspend fun setMode(mode: VoiceLanguageMode) = settings.update { it.copy(mode = mode) }

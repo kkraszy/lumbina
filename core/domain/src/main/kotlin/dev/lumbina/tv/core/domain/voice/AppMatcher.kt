@@ -98,14 +98,16 @@ private const val PREFIX_SIMILARITY = 0.9
 private const val MIN_FUZZY_LENGTH = 4
 
 /**
- * A rough sound skeleton in Latin letters: Cyrillic transliterated, spellings that sound alike
- * merged ("youtube" and "ютуб" both become "iutub"), doubled letters and spaces dropped.
+ * A rough sound skeleton in Latin letters: Cyrillic transliterated, Polish spelling as it sounds,
+ * spellings that sound alike merged ("youtube", "ютуб" and "jutub" all become "iutub"), doubled
+ * letters and spaces dropped.
  */
 internal fun skeleton(text: String): String {
-    val latin = text.lowercase().replace('ё', 'е').map { CYRILLIC[it] ?: it.toString() }.joinToString("")
+    val latin = text.lowercase().replace('ё', 'е').map { CYRILLIC[it] ?: POLISH[it] ?: it.toString() }.joinToString("")
     var s = latin.filter { it.isLetterOrDigit() }
+    POLISH_SOUNDS.forEach { (from, to) -> s = s.replace(from, to) }
     SOUNDS.forEach { (from, to) -> s = s.replace(from, to) }
-    s = s.replace('y', 'i').replace('w', 'v').replace('q', 'k')
+    s = s.replace('y', 'i').replace('j', 'i').replace('w', 'v').replace('q', 'k')
     if (s.length > MIN_FUZZY_LENGTH && s.endsWith('e')) s = s.dropLast(1)
     return s.fold(StringBuilder()) { out, c -> if (out.lastOrNull() != c) out.append(c) else out }.toString()
 }
@@ -121,6 +123,14 @@ private val CYRILLIC: Map<Char, String> = mapOf(
     'р' to "r", 'с' to "s", 'т' to "t", 'у' to "u", 'ф' to "f", 'х' to "h", 'ц' to "ts", 'ч' to "ch",
     'ш' to "sh", 'щ' to "sch", 'ъ' to "", 'ы' to "i", 'ь' to "", 'э' to "e", 'ю' to "iu", 'я' to "ia",
 )
+
+/** Polish letters by their sound; "ł" sounds as the "w" of "web". */
+private val POLISH: Map<Char, String> = mapOf(
+    'ą' to "on", 'ę' to "e", 'ó' to "u", 'ł' to "u", 'ś' to "sh", 'ć' to "ch", 'ń' to "n", 'ź' to "zh", 'ż' to "zh",
+)
+
+/** Polish spellings of sounds that [SOUNDS] spells otherwise; "dzh" is "dż" or "дж" already mapped. */
+private val POLISH_SOUNDS = listOf("dzh" to "j", "sz" to "sh", "cz" to "ch", "rz" to "zh")
 
 private fun levenshtein(a: String, b: String): Int {
     var previous = IntArray(b.length + 1) { it }

@@ -26,7 +26,7 @@ enum class VolumeChange { Up, Down, Mute, Unmute, ToggleMute }
 enum class MediaAction { Play, Pause, PlayPause, Next, Previous }
 
 /**
- * Recognizes commands in Russian and English speech-to-text output (lowercase words, no
+ * Recognizes commands in Russian, English and Polish speech-to-text output (lowercase words, no
  * punctuation, numbers spelled out). Anything that is not a command returns null and is typed.
  */
 object VoiceCommandParser {
@@ -45,7 +45,7 @@ object VoiceCommandParser {
         if (SLEEP_CANCEL.matches(phrase)) return VoiceCommand.Sleep(null)
         if (SLEEP_NOW.matches(phrase)) return VoiceCommand.Sleep(0)
         val match = SLEEP_IN.matchEntire(phrase) ?: return null
-        // Russian or English branch: the duration is the last group that matched.
+        // Russian, English or Polish branch: the duration is the last group that matched.
         return NumberWords.minutes(match.groupValues.last { it.isNotEmpty() })?.let { VoiceCommand.Sleep(it) }
     }
 
@@ -71,55 +71,87 @@ object VoiceCommandParser {
         return words.dropWhile { it in FILLERS }.dropLastWhile { it in FILLERS }.joinToString(" ")
     }
 
-    private val FILLERS = setOf("пожалуйста", "please", "люмен", "lumbina", "эй", "hey", "ну")
+    private val FILLERS =
+        setOf("пожалуйста", "please", "люмен", "lumbina", "lumbino", "эй", "hey", "ну", "proszę", "hej")
 
     private fun r(pattern: String) = Regex(pattern)
 
     private val FIXED: List<Pair<Regex, VoiceCommand>> = listOf(
         r(
             "(сделай )?(по)?громче( звук)?|прибавь( звук| громкость)?|увеличь (звук|громкость)|" +
-                "(turn )?(the )?volume up|louder|turn it up|turn up( the)?( volume)?",
+                "(turn )?(the )?volume up|louder|turn it up|turn up( the)?( volume)?|" +
+                "((zrób|daj) )?(trochę )?głośniej|pogłośnij|podgłośnij|zwiększ głośność|głośność w górę",
         ) to
             VoiceCommand.Volume(VolumeChange.Up),
         r(
             "(сделай )?(по)?тише( звук)?|убавь( звук| громкость)?|уменьши (звук|громкость)|" +
-                "(turn )?(the )?volume down|quieter|turn it down|turn down( the)?( volume)?",
+                "(turn )?(the )?volume down|quieter|turn it down|turn down( the)?( volume)?|" +
+                "((zrób|daj) )?(trochę )?ciszej|przycisz|ścisz|zmniejsz głośność|głośność w dół",
         ) to
             VoiceCommand.Volume(VolumeChange.Down),
-        r("(выключи|отключи|убери) звук|без звука|mute( the sound)?") to VoiceCommand.Volume(VolumeChange.Mute),
-        r("(включи|верни) звук|unmute") to VoiceCommand.Volume(VolumeChange.Unmute),
-        r("пауза|(поставь )?на паузу|стоп|останови( видео)?|pause|stop") to VoiceCommand.Media(MediaAction.Pause),
-        r("продолжи(ть)?( просмотр)?|играй|воспроизведи|плей|сними с паузы|play|resume|continue") to
+        r(
+            "(выключи|отключи|убери) звук|без звука|mute( the sound)?|" +
+                "wycisz( dźwięk)?|wyłącz dźwięk|bez dźwięku",
+        ) to VoiceCommand.Volume(VolumeChange.Mute),
+        r("(включи|верни) звук|unmute|włącz dźwięk|przywróć dźwięk|wyłącz wyciszenie") to
+            VoiceCommand.Volume(VolumeChange.Unmute),
+        r(
+            "пауза|(поставь )?на паузу|стоп|останови( видео)?|pause|stop|" +
+                "(daj )?pauz\\p{L}*|zatrzymaj( film| wideo| odtwarzanie)?|wstrzymaj( film| wideo| odtwarzanie)?",
+        ) to VoiceCommand.Media(MediaAction.Pause),
+        r(
+            "продолжи(ть)?( просмотр)?|играй|воспроизведи|плей|сними с паузы|play|resume|continue|" +
+                "wznów( odtwarzanie| film| wideo)?|odtwarzaj|graj|kontynuuj|odpauzuj",
+        ) to
             VoiceCommand.Media(MediaAction.Play),
-        r("(включи )?следующ\\p{L}*( серию| серия| видео| трек)?|дальше|next( episode| video)?") to
+        r(
+            "(включи )?следующ\\p{L}*( серию| серия| видео| трек)?|дальше|next( episode| video)?|" +
+                "(włącz |puść )?następn\\p{L}*( odcinek| film| wideo| utwór)?|dalej",
+        ) to
             VoiceCommand.Media(MediaAction.Next),
-        r("(включи )?предыдущ\\p{L}*( серию| серия| видео| трек)?|previous( episode| video)?") to
+        r(
+            "(включи )?предыдущ\\p{L}*( серию| серия| видео| трек)?|previous( episode| video)?|" +
+                "(włącz |puść )?poprzedn\\p{L}*( odcinek| film| wideo| utwór)?",
+        ) to
             VoiceCommand.Media(MediaAction.Previous),
-        r("домой|на главн\\p{L}*( экран)?|главн\\p{L}* экран|(go )?home") to VoiceCommand.Home,
-        r("назад|вернись( назад)?|(go )?back") to VoiceCommand.Back,
+        r(
+            "домой|на главн\\p{L}*( экран)?|главн\\p{L}* экран|(go )?home|" +
+                "(wróć )?(do|na) (domu|ekran\\p{L}* główn\\p{L}*|strony głównej)|ekran główny|strona główna",
+        ) to VoiceCommand.Home,
+        r("назад|вернись( назад)?|(go )?back|wstecz|cofnij( się)?|wróć|wróć się") to VoiceCommand.Back,
     )
 
     private val SLEEP_CANCEL =
         r(
             "(отмени|отключи|сбрось|убери|останови|стоп) таймер( сна)?|не выключай(ся)?|" +
-                "(cancel|stop)( the)? (sleep )?timer",
+                "(cancel|stop)( the)? (sleep )?timer|" +
+                "(anuluj|wyłącz|zatrzymaj|usuń|stop) (wyłącznik czasowy|wyłącznik|minutnik|timer)( snu| uśpienia)?|" +
+                "nie wyłączaj( się)?",
         )
     private val SLEEP_NOW = r(
         "(выключи(сь)?|выключить|усни)( (проектор|телевизор|тв|экран))?|спать|" +
-            "(turn off|switch off)( the)?( tv| projector)?|go to sleep|sleep",
+            "(turn off|switch off)( the)?( tv| projector)?|go to sleep|sleep|" +
+            "(wyłącz|uśpij)( się)?( telewizor| tv| projektor| ekran)?|idź spać|śpij",
     )
     private val SLEEP_IN = r(
         "(выключи(сь)?|выключить|усни|засыпай) (через|на) (.+)|" +
             "(turn off|switch off|sleep|go to sleep|sleep timer|set( a)? sleep timer)( for| in) (.+)|" +
-            "(поставь |set )?(a )?(sleep )?(таймер|timer)( сна)?( for| in| на| через)? (.+)",
+            "(поставь |set )?(a )?(sleep )?(таймер|timer)( сна)?( for| in| на| через)? (.+)|" +
+            "(wyłącz|uśpij)( się)?( telewizor| tv| projektor)? za (.+)|" +
+            "(ustaw )?(wyłącznik czasowy|wyłącznik|minutnik|timer)( snu| uśpienia)?( na| za)? (.+)",
     )
 
-    private val CLOSE = r("(закрой|закрыть|выйди из|close|quit|exit)( (.+))?")
-    private val THIS_APP = setOf("приложение", "это", "это приложение", "app", "the app", "this", "this app", "it")
+    private val CLOSE = r("(закрой|закрыть|выйди из|close|quit|exit|zamknij|wyjdź z)( (.+))?")
+    private val THIS_APP = setOf(
+        "приложение", "это", "это приложение", "app", "the app", "this", "this app", "it",
+        "aplikację", "aplikacja", "to", "tę aplikację", "tą aplikację",
+    )
 
-    private val SEARCH = r("(найди|найти|поищи|ищи|поиск|search for|search|find|look for) (.+)")
+    private val SEARCH = r(
+        "(найди|найти|поищи|ищи|поиск|search for|search|find|look for|znajdź|wyszukaj|poszukaj|szukaj) (.+)",
+    )
     private val OPEN = r(
         "(открой|открыть|запусти|запустить|включи|включить|зайди в|перейди в|покажи|" +
-            "open|launch|start|run|go to) (.+)",
+            "open|launch|start|run|go to|otwórz|uruchom|włącz|odpal|przejdź do|idź do|pokaż) (.+)",
     )
 }

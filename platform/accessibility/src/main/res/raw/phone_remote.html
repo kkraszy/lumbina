@@ -148,8 +148,9 @@
 
 <script>
 (function () {
-  var ru = (navigator.language || '').toLowerCase().indexOf('ru') === 0;
-  document.documentElement.lang = ru ? 'ru' : 'en';
+  var language = (navigator.language || '').toLowerCase();
+  var ru = language.indexOf('ru') === 0, pl = language.indexOf('pl') === 0;
+  document.documentElement.lang = ru ? 'ru' : pl ? 'pl' : 'en';
   var T = ru ? {
     remote: 'Пульт', touchpad: 'Тачпад', more: 'Ещё', hold: 'Удержать',
     padHint: 'Водите пальцем, курсор на экране.\nКасание: нажать. Два пальца или колесо мыши: прокрутка.',
@@ -177,6 +178,33 @@
     keySaved: 'Ключ сохранён', keyRemoved: 'Ключ удалён',
     goneTitle: 'Ссылка больше не работает',
     goneText: 'Откройте Lumbina на устройстве: настройки, раздел «Пульт на телефоне», и наведите камеру на код.'
+  } : pl ? {
+    remote: 'Pilot', touchpad: 'Touchpad', more: 'Więcej', hold: 'Przytrzymaj',
+    padHint: 'Przesuwaj palcem, aby przesuwać wskaźnik.\nDotknięcie: kliknięcie. Dwa palce lub kółko myszy: przewijanie.',
+    send: 'Wpisz', textHint: 'Trafi do pola tekstowego na ekranie urządzenia', typed: 'Wpisano',
+    noField: 'Na ekranie nie ma pola tekstowego',
+    open: 'Otwórz', linkHint: 'Linki YouTube otworzą się w aplikacji wybranej do YouTube',
+    opened: 'Otwarto', notOpened: 'Nie udało się otworzyć linku',
+    upload: 'Wyślij zdjęcie lub film', uploadBanner: 'Wyślij baner', asWallpaper: 'Od razu ustaw jako tapetę',
+    forWhat: 'Do czego', forBackdrop: 'Tapeta i wygaszacz', forBanner: 'Baner kafelka',
+    shrink: 'Zmniejszaj zdjęcia do rozmiaru ekranu',
+    hintBackdrop: 'Trafi na tapetę i na wygaszacz; można to zmienić w bibliotece multimediów na urządzeniu.',
+    hintBanner: 'Tylko zdjęcia. Będzie pierwszy wśród banerów i nie trafi na tapetę ani wygaszacz.',
+    online: 'połączono', offline: 'brak połączenia',
+    sending: 'Wysyłanie, ', failed: 'Nie udało się',
+    waiting: 'Czeka w kolejce', preparing: 'Przygotowywanie',
+    sentOk: '✓ Wysłano', shrunkTo: '✓ Wysłano, zmniejszono do ',
+    badFormat: '✕ Ten plik się nie nada. Nadają się zdjęcia i filmy mp4, m4v, mkv, webm, mov',
+    bannerPhoto: '✕ Banerem może być tylko zdjęcie',
+    noRoom: '✕ Za mało miejsca na urządzeniu: wolne ', badVideo: '✕ To urządzenie nie odtworzy takiego filmu: ',
+    brokenVideo: '✕ Film się nie otwiera: plik jest uszkodzony albo nie ma obrazu',
+    notSentLine: '✕ Nie udało się wysłać', mb: ' MB', gb: ' GB',
+    noArrows: 'Strzałki nie działają na tym urządzeniu',
+    keysTitle: 'Klucze usług rozpoznawania mowy', save: 'Zapisz',
+    keysHint: 'Klucz jest przechowywany na urządzeniu w postaci zaszyfrowanej i nigdy tu nie wraca. Usługę wybiera się w ustawieniach Lumbiny, w sekcji „Wprowadzanie głosowe”. Aby usunąć klucz, zapisz puste pole.',
+    keySaved: 'Klucz zapisany', keyRemoved: 'Klucz usunięty',
+    goneTitle: 'Ten link już nie działa',
+    goneText: 'Otwórz Lumbinę na urządzeniu: ustawienia, „Pilot w telefonie”, i skieruj aparat na kod.'
   } : {
     remote: 'Remote', touchpad: 'Touchpad', more: 'More', hold: 'Hold',
     padHint: 'Move your finger to move the pointer.\nTap to click. Two fingers or a mouse wheel to scroll.',
@@ -555,7 +583,7 @@
   function size(bytes) {
     var gb = bytes / (1024 * 1024 * 1024);
     var text = gb >= 1 ? gb.toFixed(1) + T.gb : Math.round(bytes / (1024 * 1024)) + T.mb;
-    return ru ? text.replace('.', ',') : text;
+    return ru || pl ? text.replace('.', ',') : text;
   }
   // A line per file in [batch]: its name, then how it goes; [cls] colors the second line.
   function line(batch, name) {

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="weather_clear">Bezchmurnie</string>
+    <string name="weather_partly_cloudy">Częściowe zachmurzenie</string>
+    <string name="weather_cloudy">Pochmurno</string>
+    <string name="weather_fog">Mgła</string>
+    <string name="weather_drizzle">Mżawka</string>
+    <string name="weather_rain">Deszcz</string>
+    <string name="weather_snow">Śnieg</string>
+    <string name="weather_showers">Przelotne opady</string>
+    <string name="weather_thunderstorm">Burza</string>
+    <string name="weather_unknown">—</string>
+    <string name="service_consent_title">Włączyć usługę pilota?</string>
+    <string name="service_consent_why">Dzięki tej usłudze przycisk Home na pilocie otwiera Lumbinę, przycisk mikrofonu włącza wprowadzanie głosowe, a szybkie menu działa nad innymi aplikacjami.</string>
+    <string name="service_consent_why_no_mic">Dzięki tej usłudze przycisk Home na pilocie otwiera Lumbinę, a szybkie menu działa nad innymi aplikacjami.</string>
+    <string name="service_consent_sees_no_mic">Widzi, które przyciski pilota są naciskane i jaka aplikacja jest na ekranie.</string>
+    <string name="service_consent_sees">Widzi, które przyciski pilota są naciskane i jaka aplikacja jest na ekranie. Wprowadzanie głosowe wpisuje tekst w aktywne pole.</string>
+    <string name="service_consent_speech">Mowa jest rozpoznawana na urządzeniu. Jeśli w sekcji „Wprowadzanie głosowe” wybierzesz usługę w chmurze lub inną aplikację, każda fraza jest wysyłana tam. Rozpoznane frazy zostają tylko w dzienniku Lumbiny na urządzeniu.</string>
+    <string name="service_consent_for_apps">Na tym urządzeniu Lumbina staje się też systemowym rozpoznawaniem mowy dla innych aplikacji.</string>
+    <string name="service_consent_mic_apps">Lumbina przekazuje dźwięk z pilota aplikacjom, które same nagrywają mikrofon, tylko jeśli na to pozwolisz: zapyta, gdy taka aplikacja zacznie nagrywać.</string>
+    <string name="service_consent_debugging">Po połączeniu przez debugowanie Lumbina sama nadaje sobie dostęp do powiadomień, aby pokazywać dzwonek i „Teraz odtwarzane” na ekranie głównym. Tam, gdzie aplikacje nie mają gdzie publikować swoich kanałów i „Kontynuuj oglądanie”, instaluje własny dodatek, Lumbina TV Provider.</string>
+    <string name="service_consent_agree">Włącz</string>
+    <string name="service_consent_not_now">Nie teraz</string>
+    <string name="commands_close">Zamknij</string>
+</resources>

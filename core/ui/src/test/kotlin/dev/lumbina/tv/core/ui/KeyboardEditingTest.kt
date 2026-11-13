@@ -25,8 +25,10 @@ class KeyboardEditingTest {
     }
 
     @Test
-    fun `layouts cycle between English and Russian`() {
-        assertEquals(KeyboardLanguage.Russian, KeyboardLanguage.English.next())
-        assertEquals(KeyboardLanguage.English, KeyboardLanguage.Russian.next())
+    fun `layouts cycle between English and the language's own`() {
+        assertEquals(KeyboardLanguage.Russian, KeyboardLanguage.English.next("ru"))
+        assertEquals(KeyboardLanguage.English, KeyboardLanguage.Russian.next("ru"))
+        assertEquals(KeyboardLanguage.Polish, KeyboardLanguage.English.next("pl"))
+        assertEquals(KeyboardLanguage.English, KeyboardLanguage.Polish.next("pl"))
     }
 }

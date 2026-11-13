@@ -63,9 +63,10 @@
     <string name="wizard_done_left">Put off: %1$s</string>
     <string name="wizard_to_home">To the home screen</string>
     <string name="plate_service_off">The remote’s service is off</string>
-    <string name="wizard_language_title" translatable="false">Язык · Language</string>
+    <string name="wizard_language_title" translatable="false">Язык · Language · Język</string>
     <string name="wizard_language_note_ru" translatable="false">Меняется только язык Lumbina. Изменить можно в настройках, в разделе «Вид и язык».</string>
     <string name="wizard_language_note_en" translatable="false">Only Lumbina’s language changes. You can change it in the settings, under “View and language”.</string>
+    <string name="wizard_language_note_pl" translatable="false">Zmienia się tylko język Lumbiny. Można go zmienić w ustawieniach, w sekcji „Wygląd i język”.</string>
     <string name="computer_title">Turn on from a computer</string>
     <string name="computer_text">On a computer on the same network, with adb installed, run these. The QR code holds the same text, to pass it on from a phone.</string>
     <string name="computer_no_address">Replace &lt;IP&gt; with this device’s address: it is in the device settings, under “Network”, in your network’s details.</string>

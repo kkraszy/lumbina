@@ -1,7 +1,7 @@
 package dev.lumbina.tv.core.domain.locale
 
 /**
- * Lumbina's own interface language, apart from the device's (e.g. Russian on an English system),
+ * Lumbina's own interface language, apart from the device's (e.g. Russian or Polish on an English system),
  * on every Android it runs on: the system keeps it from Android 13, Lumbina itself before.
  */
 interface AppLanguage {
@@ -11,6 +11,6 @@ interface AppLanguage {
     fun set(tag: String?)
 
     companion object {
-        val CHOICES = listOf(null, "ru", "en")
+        val CHOICES = listOf(null, "ru", "en", "pl")
     }
 }

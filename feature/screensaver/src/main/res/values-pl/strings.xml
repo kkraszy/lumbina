@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="screensaver_name">Wygaszacz ekranu Lumbina</string>
+    <string name="screensaver_phone_remote">Pilot w telefonie</string>
+    <string name="screensaver_close">Zamknij wygaszacz ekranu</string>
+</resources>

@@ -33,16 +33,15 @@ import java.util.Locale
 
 /**
  * Before anything else, on a device whose firmware was made for another market: there the device's
- * language says nothing about who is in front of it. Two buttons, each in its own language.
+ * language says nothing about who is in front of it. A button for each, in its own language.
  */
 @Composable
 internal fun LanguagePage(viewModel: SetupViewModel, next: () -> Unit, onRemake: () -> Unit) {
-    val russian = remember { FocusRequester() }
-    val english = remember { FocusRequester() }
+    val focus = remember { WIZARD_LANGUAGES.associateWith { FocusRequester() } }
     val device = LocalConfiguration.current.locales[0].language
     LaunchedEffect(Unit) {
         withFrameNanos { }
-        runCatching { (if (device == RUSSIAN) russian else english).requestFocus() }
+        runCatching { (focus[device] ?: focus.getValue(ENGLISH)).requestFocus() }
     }
     val choose = { tag: String ->
         // Lumbina had no language of its own yet: any choice makes the screen anew, and [onRemake]
@@ -54,14 +53,17 @@ internal fun LanguagePage(viewModel: SetupViewModel, next: () -> Unit, onRemake:
     Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
         Text(stringResource(R.string.wizard_language_title), style = MaterialTheme.typography.displaySmall)
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Button(onClick = { choose(RUSSIAN) }, modifier = Modifier.focusRequester(russian)) {
-                Text(ownName(RUSSIAN), style = MaterialTheme.typography.titleLarge)
-            }
-            Button(onClick = { choose(ENGLISH) }, modifier = Modifier.focusRequester(english)) {
-                Text(ownName(ENGLISH), style = MaterialTheme.typography.titleLarge)
+            WIZARD_LANGUAGES.forEach { tag ->
+                Button(onClick = { choose(tag) }, modifier = Modifier.focusRequester(focus.getValue(tag))) {
+                    Text(ownName(tag), style = MaterialTheme.typography.titleLarge)
+                }
             }
         }
-        listOf(R.string.wizard_language_note_ru, R.string.wizard_language_note_en).forEach { note ->
+        listOf(
+            R.string.wizard_language_note_ru,
+            R.string.wizard_language_note_en,
+            R.string.wizard_language_note_pl,
+        ).forEach { note ->
             Text(
                 stringResource(note),
                 style = MaterialTheme.typography.bodyLarge,
@@ -261,8 +263,10 @@ internal fun NoticesPage(missing: Boolean, onOpen: () -> Boolean, next: () -> Un
     }
 }
 
-private const val RUSSIAN = "ru"
 private const val ENGLISH = "en"
+
+/** The languages of the first page's buttons, in its order. */
+private val WIZARD_LANGUAGES = listOf("ru", ENGLISH, "pl")
 
 /**
  * On a step just done, until the next one comes by itself: something for the focus to stand on.

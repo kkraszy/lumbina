@@ -3,7 +3,7 @@ package dev.lumbina.tv.core.domain.voice
 /**
  * Durations as speech recognizers write them: "тридцать минут", "полтора часа", "через час",
  * "два с половиной часа", "два часа тридцать минут", "twenty five minutes", "a hundred minutes",
- * "an hour and a half", or digits ("45 минут").
+ * "an hour and a half", "półtorej godziny", "dwie i pół godziny", or digits ("45 минут").
  */
 @Suppress("MagicNumber") // the numbers are the vocabulary
 internal object NumberWords {
@@ -45,8 +45,8 @@ internal object NumberWords {
         rest.filter { it !in IGNORED }.takeIf { it.isNotEmpty() }?.let(::amountOf) ?: 0
 
     private fun unitOf(word: String): Int? = when {
-        word.startsWith("минут") || word.startsWith("minute") || word == "min" -> 1
-        word.startsWith("час") || word.startsWith("hour") -> HOUR
+        word.startsWith("минут") || word.startsWith("minut") || word == "min" -> 1
+        word.startsWith("час") || word.startsWith("hour") || word.startsWith("godzin") -> HOUR
         else -> null
     }
 
@@ -66,9 +66,9 @@ internal object NumberWords {
         }
     }
 
-    private val IGNORED = setOf("and", "и")
+    private val IGNORED = setOf("and", "и", "i")
     private val HUNDREDS = setOf("hundred", "hundreds")
-    private val HALF_SUFFIXES = listOf(listOf("and", "a", "half"), listOf("с", "половиной"))
+    private val HALF_SUFFIXES = listOf(listOf("and", "a", "half"), listOf("с", "половиной"), listOf("i", "pół"))
 
     private val FIXED_PHRASES = mapOf(
         "полчаса" to 30,
@@ -78,6 +78,10 @@ internal object NumberWords {
         "half hour" to 30,
         "an hour and a half" to 90,
         "hour and a half" to 90,
+        "pół godziny" to 30,
+        "półgodziny" to 30,
+        "półtorej godziny" to 90,
+        "półtora godziny" to 90,
     )
 
     private val VALUES = mapOf(
@@ -94,5 +98,12 @@ internal object NumberWords {
         "пятьдесят" to 50, "fifty" to 50, "шестьдесят" to 60, "sixty" to 60,
         "семьдесят" to 70, "seventy" to 70, "восемьдесят" to 80, "eighty" to 80,
         "девяносто" to 90, "ninety" to 90, "сто" to 100,
+        "jeden" to 1, "jedną" to 1, "jedna" to 1, "jedno" to 1, "dwa" to 2, "dwie" to 2, "trzy" to 3,
+        "cztery" to 4, "pięć" to 5, "sześć" to 6, "siedem" to 7, "osiem" to 8, "dziewięć" to 9,
+        "dziesięć" to 10, "jedenaście" to 11, "dwanaście" to 12, "trzynaście" to 13, "czternaście" to 14,
+        "piętnaście" to 15, "szesnaście" to 16, "siedemnaście" to 17, "osiemnaście" to 18,
+        "dziewiętnaście" to 19, "dwadzieścia" to 20, "trzydzieści" to 30, "czterdzieści" to 40,
+        "pięćdziesiąt" to 50, "sześćdziesiąt" to 60, "siedemdziesiąt" to 70, "osiemdziesiąt" to 80,
+        "dziewięćdziesiąt" to 90, "sto" to 100,
     )
 }

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="home_settings">Ustawienia</string>
+    <string name="home_favorites">Ulubione</string>
+    <string name="home_favorites_empty">Nie ma jeszcze ulubionych. Naciśnij „+” i zaznacz aplikacje.</string>
+    <string name="home_category_empty">Na razie nic tu nie ma. Naciśnij „+” i zaznacz aplikacje.</string>
+    <string name="home_details_refused">To urządzenie nie pozwala Lumbinie otworzyć informacji o aplikacji</string>
+    <string name="home_uninstall_refused">To urządzenie nie pozwala odinstalowywać aplikacji z tego miejsca</string>
+
+    <string name="menu_move">Przenieś</string>
+    <string name="menu_rename">Zmień nazwę…</string>
+    <string name="menu_voice_name">Nazwa głosowa…</string>
+    <string name="voice_name_app">Jak wołać „%1$s” głosem</string>
+    <string name="menu_hide">Ukryj</string>
+    <string name="menu_details">Informacje o aplikacji</string>
+    <string name="menu_uninstall">Odinstaluj</string>
+
+    <string name="pick_new_category">+ Nowa kategoria…</string>
+    <string name="pick_new_folder">+ Nowy folder…</string>
+
+    <string name="folder_rename">Zmień nazwę…</string>
+    <string name="folder_dissolve">Rozgrupuj</string>
+
+    <string name="name_app">Zmień nazwę „%1$s”</string>
+    <string name="name_app_hint">Zostaw puste, aby przywrócić nazwę aplikacji</string>
+    <string name="name_input_hint">Zostaw puste, aby przywrócić nazwę źródła</string>
+    <string name="name_category">Nowa kategoria</string>
+    <string name="name_folder">Nowy folder</string>
+    <string name="name_save">Zapisz</string>
+    <string name="name_cancel">Anuluj</string>
+    <string name="default_category_name">Kategoria</string>
+    <string name="default_folder_name">Folder</string>
+    <string name="home_sleep_timer">Wyłącznik czasowy</string>
+    <string name="home_inputs">Źródła</string>
+    <string name="input_connected">Podłączone</string>
+    <string name="home_sleep_in">Wyłącz za %1$d min</string>
+    <string name="home_sleep_cancel">Anuluj wyłącznik</string>
+    <string name="home_watch_next">Kontynuuj oglądanie</string>
+    <string name="status_notifications">Powiadomienia</string>
+    <string name="status_clear_notifications">Wyczyść wszystkie</string>
+    <string name="notices_hint">OK otwiera · przytrzymaj OK, aby odrzucić lub ukryć</string>
+    <string name="notice_nothing_to_open">OK odrzuca</string>
+    <string name="notice_dismiss">Odrzuć</string>
+    <string name="notice_mute">Ukryj powiadomienia z „%1$s”</string>
+    <string name="undo_notices_muted">Powiadomienia z „%1$s” są ukryte</string>
+    <string name="failed_notice">Nie udało się otworzyć powiadomienia</string>
+    <string name="notices_none">Nie ma więcej powiadomień</string>
+    <string name="failed_system_search">Wyszukiwanie się nie otworzyło. Zmień „Gdzie szukać” w ustawieniach, w sekcji „Górny pasek”</string>
+    <string name="failed_youtube_search">Nie udało się otworzyć wyszukiwania w YouTube. Sprawdź aplikację do YouTube w ustawieniach, w sekcji „Górny pasek”</string>
+    <string name="status_no_internet">Brak internetu</string>
+    <string name="home_recently_installed">Ostatnio zainstalowane</string>
+    <string name="menu_banner">Własny baner…</string>
+    <string name="banner_original">Oryginalny</string>
+    <string name="banner_photos">Zdjęcia z biblioteki</string>
+    <string name="banner_photos_hint">staje się banerem tego kafelka</string>
+    <string name="banner_add">Dodaj baner z telefonu</string>
+    <string name="banner_add_how">Gdy telefon jest w tej samej sieci Wi-Fi, skieruj jego aparat na kod: otworzy się strona pilota. W sekcji „Więcej” wybierz „Baner kafelka” i wyślij zdjęcie: pojawi się tutaj.</string>
+    <string name="banner_phone_off">Aby wysłać obraz z telefonu, włącz stronę pilota w sekcji „Pilot w telefonie” w ustawieniach.</string>
+    <string name="banner_no_network">Brak sieci: połącz urządzenie z Wi-Fi lub Ethernetem, aby wysłać obraz z telefonu.</string>
+    <string name="banner_service_off">Usługa pilota jest wyłączona, a bez niej strona pilota się nie otwiera. Włącz usługę w ustawieniach Lumbiny, aby wysłać obraz z telefonu.</string>
+    <string name="banner_open_settings">Otwórz ustawienia</string>
+    <string name="banner_open_network">Ustawienia sieci</string>
+    <string name="media_play">Odtwórz</string>
+    <string name="media_pause">Wstrzymaj</string>
+    <string name="media_next">Następny</string>
+    <string name="media_previous">Poprzedni</string>
+    <string name="home_all_apps">Wszystkie aplikacje</string>
+    <string name="home_apps">Aplikacje</string>
+    <string name="home_see_all">Zobacz wszystkie</string>
+    <string name="home_recommendations">Polecane</string>
+    <string name="apps_filter_all">Wszystkie</string>
+    <string name="apps_filter_tv">TV</string>
+    <string name="apps_filter_phone">Telefon</string>
+    <string name="apps_filter_hidden">Ukryte · %1$d</string>
+    <string name="apps_find">Znajdź</string>
+    <string name="apps_find_title">Nazwa aplikacji</string>
+    <string name="apps_nothing">Nic tu nie ma</string>
+    <string name="apps_none_found">Nic nie znaleziono dla „%1$s”</string>
+    <string name="apps_none_tv">Brak aplikacji na TV</string>
+    <string name="apps_none_phone">Brak aplikacji na telefon</string>
+    <string name="apps_show_all">Pokaż wszystkie</string>
+    <string name="menu_unhide">Pokaż ponownie</string>
+    <string name="home_search">Szukaj</string>
+    <string name="home_recommendations_mix">Dla Ciebie</string>
+    <string name="status_no_wifi">Brak sieci</string>
+    <string name="status_network_closed">To urządzenie nie pozwala otworzyć ustawień sieci</string>
+    <string name="status_weak_signal">Słaby sygnał</string>
+    <string name="home_search_youtube">Szukaj w YouTube</string>
+    <string name="home_search_find">Znajdź</string>
+    <string name="home_frequent">Często używane</string>
+    <string name="home_hold_ok_hint">Przytrzymaj OK na aplikacji, aby ją przenieść, zmienić nazwę lub ukryć</string>
+    <string name="apps_order">Kolejność</string>
+    <string name="apps_order_by_use">Często używane</string>
+    <string name="apps_order_by_name">Alfabetycznie</string>
+    <string name="apps_order_chip_by_use">Kolejność: często używane ▾</string>
+    <string name="apps_order_chip_by_name">Kolejność: alfabetycznie ▾</string>
+    <string name="apps_show">Pokaż</string>
+    <string name="apps_show_chip">Pokaż: %1$s ▾</string>
+    <string name="apps_most_used">Często używane</string>
+    <string name="apps_the_rest">Pozostałe, alfabetycznie</string>
+    <string name="menu_where">Gdzie pokazać…</string>
+    <string name="menu_name_banner">Nazwa i baner…</string>
+    <string name="where_folder">Folder „%1$s”</string>
+    <string name="folder_title">Folder „%1$s”</string>
+    <string name="move_hint">Przenoszenie: %1$s · ◀ ▶ przesuń · OK odłóż · Wstecz anuluj</string>
+    <string name="failed_app">Nie udało się otworzyć %1$s. Spróbuj ponownie</string>
+    <string name="failed_input">Nie udało się przełączyć na %1$s</string>
+    <string name="failed_program">Nie udało się otworzyć programu. Otwórz %1$s i znajdź go tam</string>
+    <string name="folder_rename_title">Zmień nazwę folderu</string>
+    <string name="home_opened">Ostatnio otwierane</string>
+    <string name="menu_to_favorites">Dodaj do ulubionych</string>
+    <string name="menu_out_of_favorites">Usuń z ulubionych</string>
+    <string name="menu_out_of">Usuń z „%1$s”</string>
+    <string name="menu_open">Otwórz</string>
+    <string name="menu_group_app">Aplikacja</string>
+    <string name="menu_only_all_apps">Tylko we „Wszystkich aplikacjach”</string>
+    <string name="undo">Cofnij</string>
+    <string name="undo_keys">▼ OK</string>
+    <string name="undo_hidden">„%1$s” jest ukryta</string>
+    <string name="undo_out_of_favorites">„%1$s” usunięto z ulubionych</string>
+    <string name="undo_out_of_category">„%1$s” usunięto z „%2$s”</string>
+    <string name="undo_input_out_of_favorites">Źródło „%1$s” usunięto z ulubionych</string>
+    <string name="undo_input_out_of_category">Źródło „%1$s” usunięto z „%2$s”</string>
+    <string name="undo_folder_dissolved">Folder „%1$s” został rozgrupowany</string>
+    <string name="undo_row_hidden">Rząd „%1$s” jest ukryty</string>
+    <string name="shortcut_hint">Otwiera ekran wszystkich aplikacji</string>
+    <string name="input_hint">Przełącza na to źródło</string>
+    <string name="menu_group_input">Źródło</string>
+    <string name="undo_shortcut_removed">Kafelek zniknął. „Wszystkie aplikacje” otwierają się też z szybkiego menu</string>
+    <string name="channels_need_access">Lumbina potrzebuje dostępu do kanałów publikowanych przez aplikacje</string>
+    <string name="channels_allow">Zezwól</string>
+    <string name="channels_hide_row">Ukryj rząd</string>
+    <string name="menu_group_folder">Folder</string>
+    <string name="where_heading">Gdzie pokazać</string>
+    <string name="where_hint">Możesz zaznaczyć kilka miejsc</string>
+    <string name="pick_apps_add">Dodaj aplikacje</string>
+    <string name="pick_apps_hint">OK zaznacza aplikację, rząd zmienia się od razu</string>
+    <string name="pick_apps_hint_inputs">OK zaznacza aplikację lub źródło, rząd zmienia się od razu</string>
+    <string name="pick_apps_title">Co pokazać w „%1$s”</string>
+    <string name="pick_apps_title_favorites">Co pokazać w ulubionych</string>
+    <string name="pick_apps_count" tools:ignore="PluralsCandidate">Wybrane: %1$d</string>
+    <string name="pick_apps_in_row">W rzędzie</string>
+    <string name="pick_apps_rest">Pozostałe, alfabetycznie</string>
+    <string name="pick_apps_inputs">Źródła</string>
+    <string name="pick_apps_in_folder">w folderze „%1$s”</string>
+    <string name="name_own">Własna…</string>
+    <string-array name="ready_names">
+        <item>Filmy</item>
+        <item>Muzyka</item>
+        <item>Gry</item>
+        <item>TV</item>
+        <item>Dzieci</item>
+        <item>Sport</item>
+        <item>Wiadomości</item>
+        <item>Usługi</item>
+    </string-array>
+    <string name="home_sleep_minutes">%1$d min</string>
+    <string name="home_sleep_left">Zostało %1$d min</string>
+    <string name="notices_none_now">Brak powiadomień</string>
+    <string name="search_none">Na tym urządzeniu nie ma gdzie szukać</string>
+    <string name="media_arrived_open">Otwórz</string>
+    <string name="media_arrived_photo">Zdjęcie z telefonu jest w bibliotece multimediów</string>
+    <string name="media_arrived_video">Film z telefonu jest w bibliotece multimediów</string>
+    <string name="media_arrived_banner">Baner z telefonu jest w bibliotece multimediów</string>
+    <plurals name="media_arrived_files">
+        <item quantity="one">%d plik z telefonu jest w bibliotece multimediów</item>
+        <item quantity="few">%d pliki z telefonu są w bibliotece multimediów</item>
+        <item quantity="many">%d plików z telefonu jest w bibliotece multimediów</item>
+        <item quantity="other">%d pliku z telefonu jest w bibliotece multimediów</item>
+    </plurals>
+</resources>

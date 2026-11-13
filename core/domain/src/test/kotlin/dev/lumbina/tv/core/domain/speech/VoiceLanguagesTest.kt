@@ -67,6 +67,15 @@ class VoiceLanguagesTest {
     }
 
     @Test
+    fun `followed with its download, the language's model is installed, and not followed, nothing is`() = runTest {
+        languages.followAppLanguageAndDownload("de", previous = null)
+        assertEquals(listOf("de"), models.installs)
+        repository.update { it.copy(languages = listOf("ru", "de")) }
+        languages.followAppLanguageAndDownload("en", previous = "de")
+        assertEquals(listOf("de"), models.installs)
+    }
+
+    @Test
     fun `voice languages the user set are kept`() = runTest {
         repository.update { it.copy(languages = listOf("ru", "de")) }
         languages.followAppLanguage("en", previous = null)

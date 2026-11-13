@@ -16,7 +16,11 @@ import dev.lumbina.tv.core.domain.home.HomeRow
 import dev.lumbina.tv.core.domain.home.RowSpotlight
 import dev.lumbina.tv.core.domain.home.TileSize
 import dev.lumbina.tv.core.domain.locale.AppLanguage
+import dev.lumbina.tv.core.domain.speech.SpeechModelInfo
+import dev.lumbina.tv.core.domain.speech.VoiceLanguages
+import dev.lumbina.tv.core.domain.speech.VoiceSettings
 import dev.lumbina.tv.core.testing.FakeSettings
+import dev.lumbina.tv.core.testing.FakeSpeechModels
 import dev.lumbina.tv.core.ui.UNDO_MILLIS
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,11 +47,20 @@ class HomeSettingsViewModelTest {
         override suspend fun update(transform: (HomeLayout) -> HomeLayout) = layout.update(transform)
     }
 
-    private val language = object : AppLanguage {
+    private class Language : AppLanguage {
+        val chosen = MutableStateFlow<String?>(null)
+
         override fun current(): String? = null
 
-        override fun set(tag: String?) = Unit
+        override fun set(tag: String?) {
+            chosen.value = tag
+        }
     }
+
+    private val language = Language()
+    private val voiceSettings = FakeSettings(VoiceSettings(listOf("en")))
+    private val models = FakeSpeechModels(listOf(SpeechModelInfo("en", 1), SpeechModelInfo("pl", 1)), setOf("en"))
+    private val voice = VoiceLanguages(models, voiceSettings) { listOf("en") }
     private val before = HomeLayout().addCategory("films", "Films").addCategory("kids", "Kids")
     private val layouts = Layouts(before)
     private val viewModel =
@@ -56,6 +69,7 @@ class HomeSettingsViewModelTest {
             layouts,
             FakeSettings(HomeAppearance()),
             language,
+            voice,
             RowSpotlight(),
             object : TvChannels {
                 override fun provider(): String? = null
@@ -95,6 +109,24 @@ class HomeSettingsViewModelTest {
         viewModel.state.first { it != null }
         viewModel.removeCategory(id)
         awaitOffer(id)
+    }
+
+    @Test
+    fun `Polish chosen as Lumbina's language makes voice listen in Polish, its model downloading`() = runTest {
+        viewModel.setLanguage("pl")
+        // Lumbina's language is set last: voice and its download are done by then.
+        language.chosen.first { it == "pl" }
+        assertEquals(listOf("pl"), voiceSettings.current.value.languages)
+        assertEquals(listOf("pl"), models.installs)
+    }
+
+    @Test
+    fun `voice languages the user chose stay when Lumbina's language changes`() = runTest {
+        voiceSettings.update { it.copy(languages = listOf("en", "pl")) }
+        viewModel.setLanguage("pl")
+        language.chosen.first { it == "pl" }
+        assertEquals(listOf("en", "pl"), voiceSettings.current.value.languages)
+        assertEquals(emptyList<String>(), models.installs)
     }
 
     @Test
@@ -155,6 +187,7 @@ class HomeSettingsViewModelTest {
             Layouts(HomeLayout()),
             look,
             language,
+            voice,
             RowSpotlight(),
             channelsOf(feeds),
             FakeSettings(ChannelSettings()),
@@ -178,6 +211,7 @@ class HomeSettingsViewModelTest {
             Layouts(HomeLayout()),
             look,
             language,
+            voice,
             RowSpotlight(),
             channelsOf(emptyList()),
             FakeSettings(ChannelSettings()),
@@ -210,6 +244,7 @@ class HomeSettingsViewModelTest {
             Layouts(HomeLayout()),
             FakeSettings(HomeAppearance()),
             language,
+            voice,
             RowSpotlight(),
             watching(ProgramCard(1, "tube", "t", null, null, null, null)),
             settings,
@@ -243,6 +278,7 @@ class HomeSettingsViewModelTest {
             Layouts(HomeLayout()),
             FakeSettings(HomeAppearance()),
             language,
+            voice,
             RowSpotlight(),
             watching(),
             FakeSettings(ChannelSettings()),

@@ -51,14 +51,24 @@ val LocalVoiceInput = staticCompositionLocalOf<(() -> Unit)?> { null }
 internal enum class KeyboardLanguage(val label: String, val lettersLabel: String, val rows: List<String>) {
     English("EN", "ABC", listOf("qwertyuiop", "asdfghjkl", "zxcvbnm")),
     Russian("RU", "АБВ", listOf("йцукенгшщзхъ", "фывапролджэ", "ячсмитьбюё")),
+    Polish("PL", "ABC", listOf("qwertyuiopęó", "asdfghjklłąś", "zxcvbnmćńźż")),
     ;
 
-    fun next(): KeyboardLanguage = entries[(ordinal + 1) % entries.size]
+    /** English and the other layout of the language Lumbina speaks, in turn. */
+    fun next(): KeyboardLanguage = next(Locale.getDefault().language)
+
+    internal fun next(language: String): KeyboardLanguage = if (this == English) native(language) else English
 
     companion object {
         /** The layout last switched to, shared by all dialogs while the app runs. */
-        var last: KeyboardLanguage =
-            if (Locale.getDefault().language == "ru") Russian else English
+        var last: KeyboardLanguage = when (Locale.getDefault().language) {
+            "ru" -> Russian
+            "pl" -> Polish
+            else -> English
+        }
+
+        /** The layout besides English: Polish for Polish, else Russian. */
+        internal fun native(language: String): KeyboardLanguage = if (language == "pl") Polish else Russian
     }
 }
 

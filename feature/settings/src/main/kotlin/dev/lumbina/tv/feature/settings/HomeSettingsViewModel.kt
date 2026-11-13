@@ -36,6 +36,7 @@ import dev.lumbina.tv.core.domain.home.TileNames
 import dev.lumbina.tv.core.domain.home.TileSize
 import dev.lumbina.tv.core.domain.home.movedRow
 import dev.lumbina.tv.core.domain.locale.AppLanguage
+import dev.lumbina.tv.core.domain.speech.VoiceLanguages
 import dev.lumbina.tv.core.ui.UNDO_MILLIS
 import dev.lumbina.tv.core.ui.WhileUiSubscribed
 import java.text.Collator
@@ -182,6 +183,7 @@ class HomeSettingsViewModel @Inject constructor(
     private val layouts: HomeLayoutRepository,
     private val appearance: HomeAppearanceRepository,
     private val appLanguage: AppLanguage,
+    private val voiceLanguages: VoiceLanguages,
     private val spotlight: RowSpotlight,
     private val channels: TvChannels,
     private val channelSettings: ChannelSettingsRepository,
@@ -385,8 +387,14 @@ class HomeSettingsViewModel @Inject constructor(
     /** The chosen language tag, null for the device language. */
     val language: String? get() = appLanguage.current()
 
+    /** Voice follows, as in the setup, and its model downloads: Polish chosen, Polish heard. */
     override fun setLanguage(tag: String?) {
-        if (tag != appLanguage.current()) appLanguage.set(tag)
+        val previous = appLanguage.current()
+        if (tag == previous) return
+        viewModelScope.launch {
+            voiceLanguages.followAppLanguageAndDownload(tag, previous)
+            appLanguage.set(tag)
+        }
     }
 
     override fun toggleTextScale() = look {

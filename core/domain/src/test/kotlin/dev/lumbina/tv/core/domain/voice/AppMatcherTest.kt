@@ -73,6 +73,9 @@ class AppMatcherTest {
             "настройки" to settings,
             "settings" to settings,
             "аптоид" to aptoide,
+            "jutub" to smartTube,
+            "smart tjub" to smartTube,
+            "wk wideo" to vk,
         )
         val wrong = expected.mapNotNull { (query, app) ->
             val actual = found(query)
@@ -100,6 +103,8 @@ class AppMatcherTest {
     fun `skeletons make spellings meet`() {
         assertEquals(skeleton("youtube"), skeleton("ютуб"))
         assertEquals(skeleton("VK Video"), skeleton("вк видео"))
+        assertEquals(skeleton("youtube"), skeleton("jutub"))
+        assertEquals(skeleton("VK Video"), skeleton("wk wideo"))
     }
 
     @Test
