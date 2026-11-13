@@ -66,6 +66,7 @@ class LocalAccessTest {
                 "appops set dev.lumbina.tv GET_USAGE_STATS allow",
                 "appops set dev.lumbina.tv ACCESS_RESTRICTED_SETTINGS allow",
                 "cmd notification allow_listener dev.lumbina.tv/dev.lumbina.tv.Listener",
+                COMPILE,
             ),
             adb.commands.flatMap { it.split(SHELL_AND_THEN) },
         )
@@ -82,10 +83,12 @@ class LocalAccessTest {
         val adb = FakeAdb(AdbState.Connected)
         access(adb).connectAndSetUp()
         val computer = access(FakeAdb(AdbState.NotListening)).computerCommands
+        // A computer waits for the compiling where Lumbina's own connection lets it go on alone.
         assertEquals(
             adb.commands.flatMap {
                 it.split(SHELL_AND_THEN)
-            }.map(ComputerSetup::adbShell).toSet(),
+            }.map { if (it == COMPILE) "cmd package compile -m speed-profile dev.lumbina.tv" else it }
+                .map(ComputerSetup::adbShell).toSet(),
             computer.toSet(),
         )
     }
@@ -110,6 +113,8 @@ class LocalAccessTest {
                 // Those who connected before Lumbina lifted the restriction get it lifted too.
                 "appops set dev.lumbina.tv ACCESS_RESTRICTED_SETTINGS allow",
                 "cmd notification allow_listener dev.lumbina.tv/dev.lumbina.tv.Listener",
+                // Compiled by its profile, as from a store: installed from a file it stutters till then.
+                COMPILE,
             ),
             adb.commands.flatMap { it.split(SHELL_AND_THEN) },
         )
@@ -239,3 +244,6 @@ class LocalAccessTest {
         const val LISTENER = "dev.lumbina.tv/dev.lumbina.tv.Listener"
     }
 }
+
+private const val COMPILE =
+    "setsid sh -c \"sh -c 'sleep 30; cmd package compile -m speed-profile dev.lumbina.tv' </dev/null >/dev/null 2>&1 &\""

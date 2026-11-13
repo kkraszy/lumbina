@@ -9,8 +9,13 @@ class CompanionInstallTest {
 
     private val companion = AndroidTvChannels.COMPANION
 
-    private fun wanted(provider: String?, installed: Long?, carried: Long? = 2, refused: Long? = null) =
-        companionWanted(provider, { installed }, carried, refused)
+    private fun wanted(
+        provider: String?,
+        installed: Long?,
+        carried: Long? = 2,
+        refused: Long? = null,
+        foreign: Boolean = false,
+    ) = companionWanted(provider, { installed }, carried, refused) { foreign }
 
     @Test
     fun `installed where there is no provider at all`() {
@@ -33,6 +38,13 @@ class CompanionInstallTest {
     fun `an update pm refused waits for the next carried version`() {
         assertFalse(wanted(companion, installed = 1, refused = 2))
         assertTrue(wanted(companion, installed = 1, carried = 3, refused = 2))
+    }
+
+    @Test
+    fun `a companion of another key is put in anew, whatever its version`() {
+        assertTrue(wanted(companion, installed = 2, foreign = true))
+        assertTrue(wanted(companion, installed = 3, refused = 2, foreign = true))
+        assertFalse(wanted(provider = "com.android.providers.tv", installed = null, foreign = true))
     }
 
     @Test

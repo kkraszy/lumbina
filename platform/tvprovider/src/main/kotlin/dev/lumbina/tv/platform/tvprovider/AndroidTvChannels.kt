@@ -91,7 +91,12 @@ internal class AndroidTvChannels @Inject constructor(
             show(reading)
             if (shown.kept.isNotEmpty()) {
                 delay(KEPT_MILLIS)
-                show(readChannels())
+                // Not answering this time: the next change, or the retries of [observe], read it.
+                try {
+                    show(readChannels())
+                } catch (_: ProviderUnreachable) {
+                    note("provider", "the TV provider is not answering")
+                }
             }
         }
     }
@@ -155,9 +160,9 @@ internal class AndroidTvChannels @Inject constructor(
         .map { isAvailable() }
         .distinctUntilChanged()
         .onEach { available -> if (!available) note("provider", "no TV provider on this device") }
-        .flatMapLatest { available -> if (available) observeProvider(read) else flowOf(empty) }
+        .flatMapLatest { available -> if (available) observeProvider(empty, read) else flowOf(empty) }
 
-    private fun <T> observeProvider(read: () -> T): Flow<T> = callbackFlow {
+    private fun <T> observeProvider(empty: T, read: () -> T): Flow<T> = callbackFlow {
         val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
             override fun onChange(selfChange: Boolean) {
                 trySend(Unit)
@@ -172,7 +177,7 @@ internal class AndroidTvChannels @Inject constructor(
         }
     }
         .afterBursts()
-        .map { read() }
+        .map { readWhenAnswering(empty, { note("provider", it) }, read) }
         .distinctUntilChanged()
         .flowOn(Dispatchers.IO)
 
@@ -182,11 +187,13 @@ internal class AndroidTvChannels @Inject constructor(
      */
     private fun Flow<Unit>.afterBursts(): Flow<Unit> = paced(DEBOUNCE_MILLIS, MAX_WAIT_MILLIS, MIN_GAP_MILLIS)
 
+    /** Throws [ProviderUnreachable] when the provider gives no cursor: its process is not up, or died. */
     private fun <T> query(uri: Uri, projection: Array<String>, parse: (TvRow) -> T?): List<T> = try {
-        resolver.query(uri, projection, null, null, null)?.use { cursor ->
+        val cursor = resolver.query(uri, projection, null, null, null) ?: throw ProviderUnreachable()
+        cursor.use {
             val row = CursorRow(cursor)
             buildList { while (cursor.moveToNext()) parse(row)?.let(::add) }
-        }.orEmpty()
+        }
     } catch (e: SecurityException) {
         log.log(TAG, "no access to $uri: $e")
         emptyList()
@@ -214,6 +221,40 @@ internal class AndroidTvChannels @Inject constructor(
         private val WATCH_NEXT: Uri = Uri.parse("content://$AUTHORITY/watch_next_program")
     }
 }
+
+/**
+ * [read], tried again while the provider doesn't answer ([ProviderUnreachable]): right after the
+ * device starts, its process may not be up yet when Lumbina's is (seen on Vidda C3, the
+ * companion's), and a provider that comes up later says nothing of it. Waits double up to
+ * [RETRY_MAX_MILLIS]; after [RETRIES] it is [empty] until the next change. [say] goes to the log.
+ */
+private suspend fun <T> readWhenAnswering(empty: T, say: (String) -> Unit, read: () -> T): T {
+    var wait = RETRY_FIRST_MILLIS
+    repeat(RETRIES) { attempt ->
+        try {
+            return read()
+        } catch (_: ProviderUnreachable) {
+            if (attempt == 0) say("the TV provider is not answering: trying again")
+            delay(wait)
+            wait = minOf(wait * 2, RETRY_MAX_MILLIS)
+        }
+    }
+    return try {
+        read()
+    } catch (_: ProviderUnreachable) {
+        say("the TV provider did not answer, nothing to show")
+        empty
+    }
+}
+
+private const val RETRY_FIRST_MILLIS = 2_000L
+private const val RETRY_MAX_MILLIS = 30_000L
+
+/** 2, 4, 8, 16, 30, 30, 30 s: past two minutes, as long as a slow device's start takes. */
+private const val RETRIES = 7
+
+/** The provider gave no cursor: see [AndroidTvChannels.query]. */
+private class ProviderUnreachable : Exception()
 
 internal class CursorRow(private val cursor: Cursor) : TvRow {
     override fun string(column: String): String? =

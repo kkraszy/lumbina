@@ -41,9 +41,12 @@ class LumbinaNotificationListener : NotificationListenerService() {
     /**
      * Leaves out what a status bar would not show either: "app is running" notices of foreground
      * services (some firmware's system apps keep several) and those their channel marks as minimal.
+     * Also Android's "Configure physical keyboards": a TV's remote counts as a keyboard, and the
+     * notice stays for good (seen on Vidda C3).
      */
     private fun isVisible(sbn: StatusBarNotification): Boolean {
         if (sbn.notification.flags and Notification.FLAG_FOREGROUND_SERVICE != 0) return false
+        if (isKeyboardSetup(sbn.packageName, sbn.notification.channelId)) return false
         val ranking = Ranking()
         val known = runCatching { currentRanking.getRanking(sbn.key, ranking) }.getOrDefault(false)
         return !known || ranking.importance > NotificationManager.IMPORTANCE_MIN
@@ -53,6 +56,10 @@ class LumbinaNotificationListener : NotificationListenerService() {
         NotificationStore.remove(sbn.key)
     }
 }
+
+/** Android's own notice to set up a keyboard's layout, which a remote brings up too. */
+internal fun isKeyboardSetup(packageName: String, channelId: String?): Boolean =
+    packageName == "android" && channelId == "PHYSICAL_KEYBOARD"
 
 /** Process-wide state shared by the listener (bound by the system) and [AndroidNotificationFeed]. */
 internal object NotificationStore {

@@ -49,8 +49,18 @@ internal class TvProviderCompanion @Inject constructor(
             installed = { companionVersion(context.packageManager) },
             carried = carried(),
             refused = prefs.getLong(REFUSED, 0L).takeIf { it > 0 },
+            foreign = ::foreign,
         )
     }
+
+    /**
+     * The companion is there with another key than Lumbina's: one of another build (the original
+     * project's, or a fork's) left from before. It shows such a Lumbina only Lumbina's own rows,
+     * never other apps' channels, and pm won't update it over the key: it is put in anew.
+     */
+    private fun foreign(): Boolean =
+        context.packageManager.checkSignatures(context.packageName, AndroidTvChannels.COMPANION) !=
+            PackageManager.SIGNATURE_MATCH
 
     /**
      * The APK goes to `pm` through the connection, as `adb install` sends it: a file would have to
@@ -65,7 +75,8 @@ internal class TvProviderCompanion @Inject constructor(
             log.log(TAG, "Lumbina TV Provider not read: $e")
             return@withLock false
         }
-        val update = channels.provider() == AndroidTvChannels.COMPANION
+        val replaced = removeForeign(adb)
+        val update = !replaced && channels.provider() == AndroidTvChannels.COMPANION
         val answer = adb.exec(companionInstallCommand(apk.size, Build.VERSION.SDK_INT), apk)
         val installed = answer?.contains("Success") == true
         // pm's answer is the only place the reason shows: a signature clash, no space, a firmware's refusal.
@@ -75,6 +86,17 @@ internal class TvProviderCompanion @Inject constructor(
         if (update && answer != null) prefs.edit { if (installed) remove(REFUSED) else putLong(REFUSED, version) }
         if (installed) channels.onGranted()
         installed
+    }
+
+    /**
+     * Removes a companion of another key ([foreign]), for Lumbina's to go in; true when it went.
+     * Its rows go with it: the apps publish them again as they are opened.
+     */
+    private suspend fun removeForeign(adb: LocalAdb): Boolean {
+        if (channels.provider() != AndroidTvChannels.COMPANION || !foreign()) return false
+        val removed = adb.shell("pm uninstall ${AndroidTvChannels.COMPANION}")?.contains("Success") == true
+        if (removed) log.log(TAG, "Lumbina TV Provider of another key removed, to be put in with Lumbina's")
+        return removed
     }
 
     private companion object {
@@ -92,13 +114,22 @@ internal class TvProviderCompanion @Inject constructor(
 /**
  * Whether to install the [carried] companion: where there is no provider at all, or where this
  * companion is the provider at an older version ([installed]), unless pm already refused that one
- * as an update ([refused]); never over another app's provider. An update brings what a newer
- * companion does: from version 2, being visible to apps on Android 11 ([companionInstallCommand]).
+ * as an update ([refused]), or a companion of another key ([foreign]) whatever its version; never
+ * over another app's provider. An update brings what a newer companion does: from version 2,
+ * being visible to apps on Android 11 ([companionInstallCommand]).
  */
-internal fun companionWanted(provider: String?, installed: () -> Long?, carried: Long?, refused: Long?): Boolean {
+internal fun companionWanted(
+    provider: String?,
+    installed: () -> Long?,
+    carried: Long?,
+    refused: Long?,
+    foreign: () -> Boolean = { false },
+): Boolean {
     if (carried == null) return false
     if (provider == null) return true
-    if (provider != AndroidTvChannels.COMPANION || refused == carried) return false
+    if (provider != AndroidTvChannels.COMPANION) return false
+    if (foreign()) return true
+    if (refused == carried) return false
     return (installed() ?: return false) < carried
 }
 

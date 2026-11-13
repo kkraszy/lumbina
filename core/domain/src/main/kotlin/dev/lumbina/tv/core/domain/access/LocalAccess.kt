@@ -161,6 +161,7 @@ class LocalAccess(
             // Also for those who connected before a version that lifts it: their service stays off the list till then.
             unrestricted(),
             notifications.command(),
+            compileInBackground(),
         )
         // Done at every opening of Lumbina, in one connection (each costs a handshake, slow on a Mi
         // Box): the log hears of it only when it fails. One failing doesn't stop the next.
@@ -181,6 +182,7 @@ class LocalAccess(
             unrestricted(),
             usageStats(),
             notifications.command(),
+            compile(),
         ).map(ComputerSetup::adbShell)
 
     /** Gives or takes back the permission, and with it brings the service on. False when not connected or refused. */
@@ -215,6 +217,23 @@ class LocalAccess(
     }
 
     private fun usageStats() = "appops set $packageName GET_USAGE_STATS allow"
+
+    /**
+     * Lumbina compiled ahead of time by its baseline profile, as a store install would be. Installed
+     * from a file, over adb or by its own update, it runs interpreted until the device compiles it
+     * some idle night, and its screens stutter. Without `-f` the device skips it while the code is
+     * compiled already; the compiled code is used from the processes' next start.
+     */
+    private fun compile() = "cmd package compile -m speed-profile $packageName"
+
+    /**
+     * [compile] in a session of its own, so it outlives the connection, a while later: the profile
+     * is written a few seconds after Lumbina's first frame, and compiling takes up to a minute. The
+     * wait and the compiling go to the background as one shell: with only the last command there,
+     * the wait held the connection, and the compiling died with it (seen on Vidda C3).
+     */
+    private fun compileInBackground() =
+        "setsid sh -c \"sh -c 'sleep $COMPILE_AFTER_SECONDS; ${compile()}' </dev/null >/dev/null 2>&1 &\""
 
     /**
      * Asks for the microphone permission a speech recognizer must hold: the system checks the
@@ -260,6 +279,9 @@ interface SetupScreens {
 }
 
 private const val WRITE_SECURE_SETTINGS = "android.permission.WRITE_SECURE_SETTINGS"
+
+/** How long after an opening of Lumbina it is compiled: its profile is written by then. */
+private const val COMPILE_AFTER_SECONDS = 30
 
 /** Commands in one shell, each run whatever the one before gave. */
 internal const val SHELL_AND_THEN = " ; "
