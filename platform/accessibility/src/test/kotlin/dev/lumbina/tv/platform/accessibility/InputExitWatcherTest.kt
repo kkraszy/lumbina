@@ -23,6 +23,8 @@ class InputExitWatcherTest {
     private var opened = 0
     private var backToAndroid = 0
     private var front: AccessibilityNodeInfo? = null
+    private var given = 0
+    private var clock = 1_000L
 
     private val inputs = object : InputSources {
         override suspend fun showAndroid(): Boolean = true.also { backToAndroid++ }
@@ -38,7 +40,9 @@ class InputExitWatcherTest {
         own = OWN,
         front = { front },
         open = { opened++ },
+        back = { true.also { given++ } },
         log = LumbinaLog { _, _ -> },
+        now = { clock },
     ).apply { start(scope) }
 
     private fun screen(packageName: String, focusable: Boolean = false) = AccessibilityNodeInfo.obtain().apply {
@@ -47,17 +51,43 @@ class InputExitWatcherTest {
         isVisibleToUser = true
     }
 
-    private fun back(action: Int) = watcher.onKey(KeyEvent(action, KeyEvent.KEYCODE_BACK))
+    /** Back pressed at [down], [held] milliseconds ago, repeated [repeat] times by now. */
+    private fun back(action: Int, held: Long = 0, repeat: Int = 0, down: Long = clock): Boolean =
+        watcher.onKey(KeyEvent(down, down + held, action, KeyEvent.KEYCODE_BACK, repeat))
 
     @Test
-    fun `Back on the bare input screen is taken, and Android's picture comes back with Lumbina`() {
+    fun `Back held on the bare input screen is taken, and Android's picture comes back with Lumbina`() {
         watcher.onWindow(TV, "$TV.LiveTv")
         front = screen(TV)
         assertTrue(back(KeyEvent.ACTION_DOWN))
-        assertTrue(back(KeyEvent.ACTION_UP))
+        assertTrue(back(KeyEvent.ACTION_DOWN, held = 300, repeat = 1))
+        assertEquals(0, opened)
+        assertTrue(back(KeyEvent.ACTION_DOWN, held = 650, repeat = 6))
+        assertTrue(back(KeyEvent.ACTION_DOWN, held = 700, repeat = 7))
+        assertTrue(back(KeyEvent.ACTION_UP, held = 750))
         scope.runCurrent()
         assertEquals(1, backToAndroid)
         assertEquals(1, opened)
+        assertEquals(0, given)
+    }
+
+    @Test
+    fun `Back pressed briefly on the bare input screen is the HDMI device's, given again to the input's screen`() {
+        watcher.onWindow(TV, "$TV.LiveTv")
+        front = screen(TV)
+        assertTrue(back(KeyEvent.ACTION_DOWN))
+        assertTrue(back(KeyEvent.ACTION_UP, held = 120))
+        scope.runCurrent()
+        assertEquals(1, given)
+        assertEquals(0, opened)
+        assertEquals(0, backToAndroid)
+        // The Back given again passes untouched.
+        clock += 50
+        assertFalse(back(KeyEvent.ACTION_DOWN))
+        assertFalse(back(KeyEvent.ACTION_UP))
+        // And the next one is looked at again.
+        clock += 1_000
+        assertTrue(back(KeyEvent.ACTION_DOWN))
     }
 
     @Test

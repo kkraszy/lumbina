@@ -460,6 +460,7 @@ internal class RemoteFeatures(
                 own = service.packageName,
                 front = { service.rootInActiveWindow },
                 open = { device.lumbinaHome.open(toStart = false) },
+                back = { service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK) },
                 log = device.log,
             )
         }
