@@ -10,8 +10,8 @@ android {
 
     defaultConfig {
         applicationId = "dev.lumbina.tv"
-        versionCode = 11
-        versionName = "0.0.11-pl"
+        versionCode = 12
+        versionName = "0.0.12-pl"
     }
 
     flavorDimensions += "services"
