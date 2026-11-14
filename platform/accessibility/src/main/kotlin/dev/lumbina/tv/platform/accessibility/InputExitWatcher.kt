@@ -16,6 +16,8 @@ import kotlinx.coroutines.launch
  * right after the input's screen gets Lumbina over it; one opened from Lumbina's quick menu or by
  * the user stays. Main thread.
  */
+// Each is a part of the device it watches or acts on, or the clock; grouping them would only hide what it takes.
+@Suppress("LongParameterList")
 internal class InputExitWatcher(
     private val inputs: InputSources,
     private val isHomeScreen: (String, String?) -> Boolean,

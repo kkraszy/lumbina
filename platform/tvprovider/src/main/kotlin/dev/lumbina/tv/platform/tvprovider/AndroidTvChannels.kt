@@ -177,7 +177,7 @@ internal class AndroidTvChannels @Inject constructor(
         }
     }
         .afterBursts()
-        .map { readWhenAnswering(empty, { note("provider", it) }, read) }
+        .map { readWhenAnswering(empty, { said -> note("provider", said) }, read) }
         .distinctUntilChanged()
         .flowOn(Dispatchers.IO)
 

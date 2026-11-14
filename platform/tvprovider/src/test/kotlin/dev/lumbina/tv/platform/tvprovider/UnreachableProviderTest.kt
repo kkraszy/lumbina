@@ -37,7 +37,7 @@ class UnreachableProviderTest {
             sort: String?,
         ): Cursor? {
             queries++
-            return if (queries <= silent) null else MatrixCursor(projection ?: emptyArray())
+            return if (queries <= silent) null else MatrixCursor(projection.orEmpty())
         }
 
         override fun getType(uri: Uri): String? = null
