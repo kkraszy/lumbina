@@ -4,4 +4,25 @@
     <uses-feature
         android:name="android.hardware.usb.host"
         android:required="false" />
+
+    <application>
+        <!-- Android asks for a USB device anew each time it is plugged in, and a stick powered by the
+             device is plugged in at each start. An app that says it handles the device may be made
+             its own ("always open Lumbina"): Android then lets it in on every attaching, without
+             asking. Nothing is shown; it closes at once, in a task of its own so home stays as it is. -->
+        <activity
+            android:name="dev.lumbina.tv.platform.adb.UsbAttachedActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/adb_usb_devices" />
+        </activity>
+    </application>
 </manifest>
