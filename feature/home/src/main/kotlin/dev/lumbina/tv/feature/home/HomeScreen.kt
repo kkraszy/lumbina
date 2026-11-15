@@ -386,6 +386,8 @@ private fun SectionTile(
                 highlighted = marked,
                 modifier = lifted,
             )
+
+            is TileContent.StickTile -> StickSectionTile(tile, sectionId, isMoving, marked, name, actions, lifted)
         }
         if (isMoving) {
             MoveArrow("◀", Modifier.align(Alignment.CenterStart).offset(x = -ARROW_OUTSIDE))

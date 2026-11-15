@@ -38,6 +38,7 @@ internal fun HomeUiState.nameOf(tile: Moving?, allApps: String): String? {
         is TileContent.FolderTile -> found.name
         TileContent.AllAppsTile -> allApps
         is TileContent.InputTile -> found.name
+        is TileContent.StickTile -> found.name
         null -> null
     }
 }

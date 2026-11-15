@@ -13,14 +13,19 @@ import java.nio.ByteOrder
 internal class AdbMessage(val command: Int, val arg0: Int, val arg1: Int, val data: ByteArray = ByteArray(0)) {
 
     fun encode(): ByteArray = ByteBuffer.allocate(HEADER_SIZE + data.size).order(ByteOrder.LITTLE_ENDIAN)
-        .putInt(command)
+        .putHeader()
+        .put(data)
+        .array()
+
+    /** The header alone: over USB it goes in a transfer of its own, the payload in the next. */
+    fun header(): ByteArray = ByteBuffer.allocate(HEADER_SIZE).order(ByteOrder.LITTLE_ENDIAN).putHeader().array()
+
+    private fun ByteBuffer.putHeader(): ByteBuffer = putInt(command)
         .putInt(arg0)
         .putInt(arg1)
         .putInt(data.size)
         .putInt(checksum(data))
         .putInt(command.inv())
-        .put(data)
-        .array()
 
     override fun toString(): String = "${name(command)}($arg0, $arg1, ${data.size} bytes)"
 
@@ -49,14 +54,19 @@ internal class AdbMessage(val command: Int, val arg0: Int, val arg1: Int, val da
         fun read(input: InputStream): AdbMessage {
             val stream = DataInputStream(input)
             val header = ByteArray(HEADER_SIZE).also(stream::readFully)
+            return decode(header) { length -> ByteArray(length).also(stream::readFully) }
+        }
+
+        /** The message whose [header] this is, its payload from [payload] given the payload's length. */
+        fun decode(header: ByteArray, payload: (Int) -> ByteArray): AdbMessage {
             val buffer = ByteBuffer.wrap(header).order(ByteOrder.LITTLE_ENDIAN)
             val command = buffer.int
             val arg0 = buffer.int
             val arg1 = buffer.int
             val length = buffer.int
-            buffer.int // checksum: TCP already guards the bytes
+            buffer.int // checksum: TCP and USB already guard the bytes
             if (buffer.int != command.inv() || length !in 0..MAX_PAYLOAD) throw IOException("bad adb header")
-            return AdbMessage(command, arg0, arg1, ByteArray(length).also(stream::readFully))
+            return AdbMessage(command, arg0, arg1, if (length == 0) ByteArray(0) else payload(length))
         }
 
         private fun name(command: Int): String = String(

@@ -9,7 +9,10 @@ import java.text.Collator
 import java.util.Locale
 import kotlinx.coroutines.flow.Flow
 
-/** Something placed in a section: an app, a folder of apps, the shortcut to all apps or a video input. */
+/**
+ * Something placed in a section: an app, a folder of apps, the shortcut to all apps, a video input
+ * or an app on the Android device on USB.
+ */
 sealed interface HomeItem {
     /** Identifies the item within its section, e.g. for moving it. */
     val key: String
@@ -37,15 +40,30 @@ sealed interface HomeItem {
     data class Input(val id: String) : HomeItem {
         override val key: String get() = INPUT_KEY_PREFIX + id
     }
+
+    /**
+     * A tile that opens an app on the Android device on USB ([dev.lumbina.tv.core.domain.device.AttachedDevices]:
+     * a stick) and switches to that device's picture, on input [inputId]. Any row may have each such
+     * app once; its name is [HomeLayout.stickNames]'.
+     */
+    data class StickApp(val packageName: String, val activity: String, val inputId: String) : HomeItem {
+        /** `package/activity`, as `am start -n` takes it. */
+        val component: String get() = "$packageName/$activity"
+
+        override val key: String get() = STICK_KEY_PREFIX + component
+    }
 }
 
 private const val INPUT_KEY_PREFIX = "input:"
+private const val STICK_KEY_PREFIX = "stick:"
 
 /**
  * Whether a key of the user's banners ([HomeAppearance.customBanners]) is a tile of Lumbina's own
- * ("All apps", an input's: their [HomeItem.key]) rather than an app's ([dev.lumbina.tv.core.domain.app.AppId.flatten]).
+ * ("All apps", an input's, a device's app's: their [HomeItem.key]) rather than an app's
+ * ([dev.lumbina.tv.core.domain.app.AppId.flatten]).
  */
-fun isOwnTileKey(key: String): Boolean = key == HomeItem.AllApps.key || isInputKey(key)
+fun isOwnTileKey(key: String): Boolean =
+    key == HomeItem.AllApps.key || isInputKey(key) || key.startsWith(STICK_KEY_PREFIX)
 
 /** Whether a banner key is an input's tile, whichever input. */
 fun isInputKey(key: String): Boolean = key.startsWith(INPUT_KEY_PREFIX)
@@ -80,7 +98,7 @@ data class HomeSection(
 private fun HomeItem.apps(): List<AppId> = when (this) {
     is HomeItem.AppItem -> listOf(app)
     is HomeItem.Folder -> apps
-    HomeItem.AllApps, is HomeItem.Input -> emptyList()
+    HomeItem.AllApps, is HomeItem.Input, is HomeItem.StickApp -> emptyList()
 }
 
 /**
@@ -100,6 +118,8 @@ data class HomeLayout(
     val voiceNames: Map<AppId, String> = emptyMap(),
     /** Names the user gave video inputs, by [InputSource.id], instead of the firmware's. */
     val inputLabels: Map<String, String> = emptyMap(),
+    /** The names of the apps on the device on USB, by [HomeItem.StickApp.component]: the app's own, or the user's. */
+    val stickNames: Map<String, String> = emptyMap(),
 ) {
     init {
         require(sections.firstOrNull()?.isFavorites == true) { "favorites must come first" }
@@ -111,6 +131,8 @@ data class HomeLayout(
             require(section.items.count { it == HomeItem.AllApps } <= 1) { "two all-apps tiles in ${section.id}" }
             val inputs = section.items.filterIsInstance<HomeItem.Input>()
             require(inputs.distinct().size == inputs.size) { "duplicate input in ${section.id}" }
+            val sticks = section.items.filterIsInstance<HomeItem.StickApp>().map { it.component }
+            require(sticks.distinct().size == sticks.size) { "duplicate device app in ${section.id}" }
             require(section.apps.distinct().size == section.apps.size) { "duplicate app in ${section.id}" }
             require(section.apps.none { it in hidden }) { "hidden app in ${section.id}" }
         }
@@ -169,6 +191,27 @@ data class HomeLayout(
         shown -> updateSection(sectionId) { it.copy(items = it.items + tile) }
         else -> updateSection(sectionId) { it.copy(items = it.items - tile) }
     }
+
+    /** Whether the section has the tile of the device's app [component] ([HomeItem.StickApp.component]). */
+    fun hasStickApp(sectionId: String, component: String): Boolean =
+        section(sectionId)?.items?.any { it is HomeItem.StickApp && it.component == component } == true
+
+    /**
+     * Puts [app]'s tile at the end of the section, or takes it out of it. One already there for
+     * another input is switched to [app]'s, where it stands.
+     */
+    fun withStickApp(sectionId: String, app: HomeItem.StickApp, shown: Boolean): HomeLayout = updateSection(sectionId) {
+        val at = it.items.indexOfFirst { item -> item is HomeItem.StickApp && item.component == app.component }
+        when {
+            !shown -> it.copy(items = it.items.filterIndexed { index, _ -> index != at })
+            at < 0 -> it.copy(items = it.items + app)
+            else -> it.copy(items = it.items.toMutableList().apply { set(at, app) })
+        }
+    }
+
+    /** Calls the device's app [component] [name]; blank forgets the name. */
+    fun nameStickApp(component: String, name: String): HomeLayout =
+        copy(stickNames = if (name.isBlank()) stickNames - component else stickNames + (component to name.trim()))
 
     /** Gives input [id] a name of the user's; a blank [label] brings back the firmware's. */
     fun renameInput(id: String, label: String): HomeLayout =
@@ -300,6 +343,8 @@ data class HomeLayout(
 
         is HomeItem.Input -> inputs.firstOrNull { it.id == id }
             ?.let { TileContent.InputTile(id, nameOf(it), key, it.presence) }
+
+        is HomeItem.StickApp -> TileContent.StickTile(this, stickNames[component] ?: packageName)
     }
 
     /** [input]'s name on screen: the user's, else the firmware's. */
@@ -321,7 +366,7 @@ private fun HomeSection.without(app: AppId): HomeSection = copy(
         when (item) {
             is HomeItem.AppItem -> item.takeIf { it.app != app }
             is HomeItem.Folder -> item.copy(apps = item.apps - app).takeIf { it.apps.isNotEmpty() }
-            HomeItem.AllApps, is HomeItem.Input -> item
+            HomeItem.AllApps, is HomeItem.Input, is HomeItem.StickApp -> item
         }
     },
 )
@@ -365,6 +410,11 @@ sealed interface TileContent {
     ) : TileContent {
         /** [name] with the working device's: what the tile says. */
         val caption: String get() = inputCaption(name, presence)
+    }
+
+    /** An app on the device on USB, under its [name]: OK opens it there and switches to its input. */
+    data class StickTile(val app: HomeItem.StickApp, val name: String) : TileContent {
+        override val key: String get() = app.key
     }
 }
 

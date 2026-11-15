@@ -168,4 +168,9 @@
         <item quantity="many">%d файлов с телефона в медиатеке</item>
         <item quantity="other">%d файла с телефона в медиатеке</item>
     </plurals>
+
+    <!-- The tile of an app on the device on USB. -->
+    <string name="failed_stick">Не удалось открыть %1$s на устройстве по USB</string>
+    <string name="stick_hint">Открывает это приложение на устройстве по USB и переключает на его вход</string>
+    <string name="menu_group_stick">Устройство по USB</string>
 </resources>

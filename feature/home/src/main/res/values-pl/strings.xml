@@ -168,4 +168,9 @@
         <item quantity="many">%d plików z telefonu jest w bibliotece multimediów</item>
         <item quantity="other">%d pliku z telefonu jest w bibliotece multimediów</item>
     </plurals>
+
+    <!-- The tile of an app on the device on USB. -->
+    <string name="failed_stick">Nie udało się uruchomić %1$s na urządzeniu USB</string>
+    <string name="stick_hint">Uruchamia tę aplikację na urządzeniu USB i przełącza na jego źródło</string>
+    <string name="menu_group_stick">Urządzenie na USB</string>
 </resources>

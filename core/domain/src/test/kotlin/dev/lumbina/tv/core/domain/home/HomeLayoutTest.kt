@@ -215,4 +215,20 @@ class HomeLayoutTest {
         assertEquals(TileContent.InputTile("1281", "Приставка", "input:1281"), tile)
         assertEquals("HDMI 1", named.renameInput(hdmi.id, "").nameOf(hdmi))
     }
+
+    @Test
+    fun `a device's app is in a row once, its input switched where it stands, and shown under its name`() {
+        val hdmi1 = HomeItem.StickApp("pl.tvp.sport.tv", ".Main", "hdmi1")
+        val hdmi2 = hdmi1.copy(inputId = "hdmi2")
+        val layout = HomeLayout()
+            .withStickApp(FAVORITES, hdmi1, shown = true)
+            .withAllApps(FAVORITES, true)
+            .withStickApp(FAVORITES, hdmi2, shown = true)
+            .nameStickApp(hdmi1.component, "TVP Sport")
+        assertEquals(listOf(hdmi2, HomeItem.AllApps), layout.favorites.items)
+        assertTrue(layout.hasStickApp(FAVORITES, hdmi1.component))
+        val tile = layout.arrange(emptyList(), Locale.ROOT).sections.first().tiles.first()
+        assertEquals(TileContent.StickTile(hdmi2, "TVP Sport"), tile)
+        assertFalse(layout.withStickApp(FAVORITES, hdmi1, shown = false).hasStickApp(FAVORITES, hdmi1.component))
+    }
 }

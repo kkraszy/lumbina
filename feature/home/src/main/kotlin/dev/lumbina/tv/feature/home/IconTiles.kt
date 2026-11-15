@@ -100,6 +100,21 @@ internal fun InputTile(
     banner = banner,
 )
 
+/**
+ * The tile of an app on the device on USB, under its [label]: the app's picture read from the
+ * device ([banner]), else the input's icon. As [IconTile].
+ */
+@Composable
+internal fun StickTile(
+    onClick: () -> Unit,
+    label: String,
+    name: TileName,
+    modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null,
+    highlighted: Boolean = false,
+    banner: String? = null,
+) = IconTile(R.drawable.ic_input_hdmi, onClick, label, name, modifier, onLongClick, highlighted, banner = banner)
+
 /** A mark in a tile's corner: a dot ([filled]) or a ring, at the top left ([atStart]) or right. */
 internal class TileMark(val filled: Boolean, val atStart: Boolean)
 

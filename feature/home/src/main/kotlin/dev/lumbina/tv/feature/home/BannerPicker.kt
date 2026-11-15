@@ -84,6 +84,10 @@ sealed interface BannerOf {
     data class OfInput(val input: TileContent.InputTile) : BannerOf {
         override val key: String get() = input.key
     }
+
+    data class OfStick(val tile: TileContent.StickTile) : BannerOf {
+        override val key: String get() = tile.key
+    }
 }
 
 /** The user's banners, and the library's photos a banner is made of on choosing one. */
@@ -115,17 +119,12 @@ internal fun BannerPicker(
         commands.setBanner(of.key, uri)
         dismiss()
     }
-    val name = when (of) {
-        is BannerOf.OfApp -> of.app.label
-        BannerOf.AllApps -> stringResource(R.string.home_all_apps)
-        is BannerOf.OfInput -> of.input.name
-    }
+    val name = bannerName(of)
     // The name of the entry that opened the panel, which needs no declension around the tile's name.
     SidePanel(
         title = pageName(R.string.menu_banner),
         onDismiss = dismiss,
-        // "All apps" has the banner in its own menu, with no "Name and banner" on the way.
-        path = if (of == BannerOf.AllApps) listOf(name) else listOf(name, pageName(R.string.menu_name_banner)),
+        path = bannerPath(of, name),
     ) {
         if (choices == null || pictures == null) return@SidePanel
         // Once, when the pictures are first read: one sent later must not pull the focus to itself.
@@ -171,13 +170,25 @@ internal fun BannerPicker(
     }
 }
 
+/**
+ * The way to the picker: "All apps" and a device's app have the banner in their own menu, with no
+ * "Name and banner" on the way.
+ */
+@Composable
+private fun bannerPath(of: BannerOf, name: String): List<String> =
+    if (of == BannerOf.AllApps || of is BannerOf.OfStick) {
+        listOf(name)
+    } else {
+        listOf(name, pageName(R.string.menu_name_banner))
+    }
+
 /** What the tile shows without a banner of the user's: the app's own, or the icon and name of Lumbina's tile. */
 @Composable
 private fun OwnLook(of: BannerOf) {
     when (of) {
         is BannerOf.OfApp -> AppArtwork(of.app)
         BannerOf.AllApps -> IconArt(R.drawable.ic_apps)
-        is BannerOf.OfInput -> IconArt(R.drawable.ic_input_hdmi)
+        is BannerOf.OfInput, is BannerOf.OfStick -> IconArt(R.drawable.ic_input_hdmi)
     }
 }
 
