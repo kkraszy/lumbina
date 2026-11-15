@@ -2,15 +2,16 @@ name: Develop
 
 # A build to try before a release, signed with the release key: it installs over a released Lumbina
 # and keeps its settings. Its version is the release's with "-dev.<run>.<commit>" after it, so the
-# device is offered the next release and not this one again. Kept as the run's artifact, not
-# published.
+# device is offered the next release and not this one again. Published as the one pre-release
+# "develop-latest", replaced by each build: Lumbina's updates read the latest release only, which a
+# pre-release never is, so no device is offered it.
 on:
   push:
     branches: [develop]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: develop-${{ github.ref }}
@@ -57,6 +58,8 @@ jobs:
       - name: Collect the package
         run: |
           mkdir dist
+          version=$(sed -n 's/^ *versionName = "\([^"]*\)"$/\1/p' app/build.gradle.kts)
+          echo "VERSION=$version-dev.${GITHUB_RUN_NUMBER}.${GITHUB_SHA::7}" >> "$GITHUB_ENV"
           name="lumbina-dev.${GITHUB_RUN_NUMBER}.${GITHUB_SHA::7}.apk"
           cp app/build/outputs/apk/foss/release/*.apk "dist/$name"
           (cd dist && sha256sum *.apk > SHA256SUMS.txt)
@@ -67,3 +70,24 @@ jobs:
           name: ${{ env.NAME }}
           path: dist/*
           retention-days: 30
+
+      # One pre-release, its tag moved to this commit: the last one and its tag go, this one comes.
+      - name: Publish as the develop pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete develop-latest --cleanup-tag --yes || true
+          {
+            echo "Development build **${VERSION}**, from \`${GITHUB_REF_NAME}\` at ${GITHUB_SHA::7}."
+            echo
+            echo "Signed with the release key: installs over a released Lumbina and keeps its settings."
+            echo "Not offered by Lumbina's updates; the next release is offered over it."
+            echo
+            git log -1 --format='%B' | sed '/^Co-Authored-By:/d'
+          } > notes.md
+          gh release create develop-latest dist/* \
+            --target "$GITHUB_SHA" \
+            --title "Develop ${VERSION}" \
+            --notes-file notes.md \
+            --prerelease \
+            --latest=false
