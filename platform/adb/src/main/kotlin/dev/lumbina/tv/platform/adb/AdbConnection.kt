@@ -20,6 +20,18 @@ internal class AdbConnection private constructor(private val transport: AdbTrans
     /** The most the device takes in one message; it says so when the connection is made. */
     private var maxData = AdbMessage.MAX_DATA
 
+    /**
+     * What the device said of itself on connecting:
+     * "device::ro.product.name=…;ro.product.model=MiTV-AFMU1;ro.product.device=…;features=…".
+     */
+    var banner: String = ""
+        private set
+
+    /** The device's model, as its [banner] has it; empty where it doesn't say. */
+    val model: String
+        get() = banner.substringAfter("::", "").split(';')
+            .firstOrNull { it.startsWith(MODEL) }?.removePrefix(MODEL).orEmpty()
+
     /** Runs [command] in `shell:` and returns everything it printed. */
     fun shell(command: String, timeoutMillis: Int): String = run("shell:$command", null, timeoutMillis)
 
@@ -106,6 +118,7 @@ internal class AdbConnection private constructor(private val transport: AdbTrans
             when {
                 message.command == AdbMessage.CNXN -> {
                     if (message.arg1 in 1 until AdbMessage.MAX_DATA) maxData = message.arg1
+                    banner = message.data.toString(Charsets.UTF_8).trimEnd('\u0000')
                     return true
                 }
 
@@ -130,6 +143,7 @@ internal class AdbConnection private constructor(private val transport: AdbTrans
 
     companion object {
         private const val CONNECT_TIMEOUT_MILLIS = 2_000
+        private const val MODEL = "ro.product.model="
         private const val READ_TIMEOUT_MILLIS = 5_000
         private const val HOST_BANNER = "host::lumbina\u0000"
         private const val KEY_NAME = "lumbina@dev.lumbina.tv"

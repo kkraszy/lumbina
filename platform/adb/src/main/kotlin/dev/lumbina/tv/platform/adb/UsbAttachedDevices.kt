@@ -44,6 +44,7 @@ internal class UsbAttachedDevices @Inject constructor(
     private val usb: UsbManager? = context.getSystemService(UsbManager::class.java)
     private val mutex = Mutex()
     private val looks = LookCache(File(context.filesDir, "$BANNERS_DIR/looks.properties"))
+    private val network = NetworkAdb(context, log, lumbinaKey)
 
     init {
         AttachedDebugCommands(context, this, CoroutineScope(SupervisorJob() + Dispatchers.IO), log)
@@ -54,16 +55,27 @@ internal class UsbAttachedDevices @Inject constructor(
         usbDevices().map { AttachedDevice(id = it.deviceName, name = nameOf(it)) }
     }
 
+    /**
+     * Over the network where the device is found there, asking nothing; else over USB, asking for the
+     * USB device and for Lumbina's key, and learning the device's address for the next time.
+     */
     override suspend fun connect(device: AttachedDevice): AttachedState {
         val usbDevice = find(device) ?: return AttachedState.Gone
+        if (open(usbDevice, offerKey = false) { true }.value == true) {
+            return AttachedState.Connected.also { log.log(TAG, "connect ${device.name}: over the network") }
+        }
         if (!permitted(usbDevice)) return AttachedState.NotPermitted.also { log.log(TAG, "connect: not permitted") }
-        val state = open(usbDevice, offerKey = true) { AttachedState.Connected }.state
+        val state = open(usbDevice, offerKey = true) { connection ->
+            addressIn(connection.shell(ADDRESS_COMMAND, SHELL_TIMEOUT_MILLIS))
+                ?.let { network.remember(modelOf(usbDevice), it) }
+            AttachedState.Connected
+        }.state
         log.log(TAG, "connect ${device.name}: $state")
         return state
     }
 
     override suspend fun shell(device: AttachedDevice, command: String): String? {
-        val usbDevice = find(device)?.takeIf { usb?.hasPermission(it) == true } ?: return null
+        val usbDevice = find(device) ?: return null
         val result = open(usbDevice, offerKey = false) { it.shell(command, SHELL_TIMEOUT_MILLIS) }
         log.log(TAG, "shell \"$command\": ${if (result.value != null) "ok" else result.state}")
         return result.value
@@ -74,7 +86,7 @@ internal class UsbAttachedDevices @Inject constructor(
      * version ([LookCache]). The package is copied again once if the copy breaks off.
      */
     override suspend fun look(device: AttachedDevice, app: AttachedApp): AppLook? {
-        val usbDevice = find(device)?.takeIf { usb?.hasPermission(it) == true } ?: return null
+        val usbDevice = find(device) ?: return null
         val version = shell(device, "dumpsys package ${app.packageName} | grep -m2 -E 'versionCode=|lastUpdateTime='")
             ?.lines()?.joinToString(" ") { it.trim() }?.trim().orEmpty()
         val picture = File(context.filesDir, "$BANNERS_DIR/${app.packageName}.png")
@@ -139,10 +151,25 @@ internal class UsbAttachedDevices @Inject constructor(
 
     private class Result<T>(val state: AttachedState, val value: T? = null)
 
+    /**
+     * A connection to [device] for [use]: over the network where it is found there (only when no key
+     * is to be offered: that is asked over USB), else over USB, where Lumbina may use the USB device.
+     */
     private suspend fun <T> open(device: UsbDevice, offerKey: Boolean, use: (AdbConnection) -> T): Result<T> =
         withContext(Dispatchers.IO) {
             mutex.withLock {
+                if (!offerKey) {
+                    network.open(modelOf(device))?.let { connection ->
+                        return@withLock try {
+                            connection.use { Result(AttachedState.Connected, use(it)) }
+                        } catch (e: IOException) {
+                            log.log(TAG, "network connection: $e")
+                            Result(AttachedState.Failed)
+                        }
+                    }
+                }
                 val manager = usb ?: return@withLock Result(AttachedState.Gone)
+                if (!manager.hasPermission(device)) return@withLock Result(AttachedState.NotPermitted)
                 try {
                     val transport = UsbTransport.open(manager, device)
                     val connection = AdbConnection.open(transport, lumbinaKey.key, offerKey, PROMPT_MILLIS)
@@ -199,14 +226,6 @@ internal class UsbAttachedDevices @Inject constructor(
 
     private fun find(deviceName: String): UsbDevice? = usbDevices().firstOrNull { it.deviceName == deviceName }
 
-    /** What [device] calls itself on USB; Android reads that without permission. */
-    private fun nameOf(device: UsbDevice): String = listOfNotNull(device.manufacturerName, device.productName)
-        .map(String::trim)
-        .filter(String::isNotEmpty)
-        .distinct()
-        .joinToString(" ")
-        .ifEmpty { device.deviceName }
-
     private companion object {
         const val TAG = "usb-adb"
         const val ACTION_PERMISSION = "dev.lumbina.tv.USB_PERMISSION"
@@ -214,6 +233,9 @@ internal class UsbAttachedDevices @Inject constructor(
         /** Long enough to switch to the device's input, find its prompt and answer it. */
         const val PROMPT_MILLIS = 90_000
         const val SHELL_TIMEOUT_MILLIS = 15_000
+
+        /** The device's addresses, one a line: where it is on the network. */
+        const val ADDRESS_COMMAND = "ip -4 -o addr show"
 
         /** How long copying a package may go without a byte. */
         const val COPY_TIMEOUT_MILLIS = 30_000
@@ -229,3 +251,14 @@ internal class UsbAttachedDevices @Inject constructor(
         val DENSITY_SPLIT = Regex("""/split_config\.[a-z]*dpi\.apk$""")
     }
 }
+
+/** [device]'s model, as it says on USB (Android reads that without permission) and on connecting. */
+private fun modelOf(device: UsbDevice): String = device.productName?.trim().orEmpty()
+
+/** What [device] calls itself on USB; Android reads that without permission. */
+private fun nameOf(device: UsbDevice): String = listOfNotNull(device.manufacturerName, device.productName)
+    .map(String::trim)
+    .filter(String::isNotEmpty)
+    .distinct()
+    .joinToString(" ")
+    .ifEmpty { device.deviceName }
