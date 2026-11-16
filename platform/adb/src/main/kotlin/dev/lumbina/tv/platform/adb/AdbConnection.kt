@@ -9,20 +9,28 @@ import java.net.InetSocketAddress
 import java.net.Socket
 
 /**
- * One adb connection over TCP (blocking; call off the main thread). [open] does the handshake:
- * the device challenges with a token and Lumbina signs it; if the device doesn't know the key,
- * sending the public key makes it show its "Allow debugging?" prompt.
+ * One adb connection, over TCP or USB as its [transport] goes (blocking; call off the main thread).
+ * [open] does the handshake: the device challenges with a token and Lumbina signs it; if the device
+ * doesn't know the key, sending the public key makes it show its "Allow debugging?" prompt.
  */
-internal class AdbConnection private constructor(
-    private val socket: Socket,
-    private val input: InputStream,
-    private val output: OutputStream,
-) : Closeable {
+internal class AdbConnection private constructor(private val transport: AdbTransport) : Closeable {
 
     private var nextLocalId = 1
 
     /** The most the device takes in one message; it says so when the connection is made. */
     private var maxData = AdbMessage.MAX_DATA
+
+    /**
+     * What the device said of itself on connecting:
+     * "device::ro.product.name=…;ro.product.model=MiTV-AFMU1;ro.product.device=…;features=…".
+     */
+    var banner: String = ""
+        private set
+
+    /** The device's model, as its [banner] has it; empty where it doesn't say. */
+    val model: String
+        get() = banner.substringAfter("::", "").split(';')
+            .firstOrNull { it.startsWith(MODEL) }?.removePrefix(MODEL).orEmpty()
 
     /** Runs [command] in `shell:` and returns everything it printed. */
     fun shell(command: String, timeoutMillis: Int): String = run("shell:$command", null, timeoutMillis)
@@ -40,18 +48,32 @@ internal class AdbConnection private constructor(
         run("exec:$command", input, timeoutMillis)
 
     /**
-     * Opens [service] and talks to it until the device closes the stream. The device allows one
-     * message of ours at a time: each piece of [input] goes after its answer to the one before.
+     * Runs [command] in `exec:` and writes its raw output to [output] as it comes: a file read off
+     * the device need not fit in memory. [timeoutMillis] is how long it may go quiet, not in all.
      */
+    fun execTo(command: String, output: OutputStream, timeoutMillis: Int) {
+        run("exec:$command", null, timeoutMillis, output)
+    }
+
     private fun run(service: String, input: InputStream?, timeoutMillis: Int): String {
-        socket.soTimeout = timeoutMillis
+        val out = ByteArrayOutputStream()
+        run(service, input, timeoutMillis, out)
+        return out.toString(Charsets.UTF_8.name())
+    }
+
+    /**
+     * Opens [service] and talks to it until the device closes the stream, writing what it says to
+     * [out]. The device allows one message of ours at a time: each piece of [input] goes after its
+     * answer to the one before.
+     */
+    private fun run(service: String, input: InputStream?, timeoutMillis: Int, out: OutputStream) {
+        transport.timeoutMillis = timeoutMillis
         val localId = nextLocalId++
         send(AdbMessage(AdbMessage.OPEN, localId, 0, "$service\u0000".toByteArray()))
-        val out = ByteArrayOutputStream()
         val buffer = ByteArray(maxData)
         var ended = input == null
         while (true) {
-            val message = AdbMessage.read(input = this.input)
+            val message = transport.read()
             when (message.command) {
                 AdbMessage.WRTE -> {
                     out.write(message.data)
@@ -60,7 +82,7 @@ internal class AdbConnection private constructor(
 
                 AdbMessage.CLSE -> {
                     send(AdbMessage(AdbMessage.CLSE, localId, message.arg0))
-                    return out.toString(Charsets.UTF_8.name())
+                    return
                 }
 
                 AdbMessage.OKAY -> if (!ended) {
@@ -77,14 +99,9 @@ internal class AdbConnection private constructor(
         }
     }
 
-    override fun close() {
-        runCatching { socket.close() }
-    }
+    override fun close() = transport.close()
 
-    private fun send(message: AdbMessage) {
-        output.write(message.encode())
-        output.flush()
-    }
+    private fun send(message: AdbMessage) = transport.write(message)
 
     /** True once connected; false when the key isn't allowed (and [offerKey] is off, or the user said no). */
     private fun handshake(key: AdbKey, offerKey: Boolean, promptMillis: Int): Boolean {
@@ -93,7 +110,7 @@ internal class AdbConnection private constructor(
         var offered = false
         while (true) {
             val message = try {
-                AdbMessage.read(input)
+                transport.read()
             } catch (e: IOException) {
                 // After the key was offered, a closed or silent connection means "not allowed".
                 if (offered) return false else throw e
@@ -101,6 +118,7 @@ internal class AdbConnection private constructor(
             when {
                 message.command == AdbMessage.CNXN -> {
                     if (message.arg1 in 1 until AdbMessage.MAX_DATA) maxData = message.arg1
+                    banner = message.data.toString(Charsets.UTF_8).trimEnd('\u0000')
                     return true
                 }
 
@@ -116,7 +134,7 @@ internal class AdbConnection private constructor(
                 else -> {
                     // The device shows its prompt now and answers with CNXN once the user allows.
                     offered = true
-                    socket.soTimeout = promptMillis
+                    transport.timeoutMillis = promptMillis
                     send(AdbMessage(AdbMessage.AUTH, AdbMessage.AUTH_RSA_PUBLIC_KEY, 0, key.publicKeyLine(KEY_NAME)))
                 }
             }
@@ -125,6 +143,7 @@ internal class AdbConnection private constructor(
 
     companion object {
         private const val CONNECT_TIMEOUT_MILLIS = 2_000
+        private const val MODEL = "ro.product.model="
         private const val READ_TIMEOUT_MILLIS = 5_000
         private const val HOST_BANNER = "host::lumbina\u0000"
         private const val KEY_NAME = "lumbina@dev.lumbina.tv"
@@ -138,14 +157,24 @@ internal class AdbConnection private constructor(
             val socket = Socket()
             try {
                 socket.connect(InetSocketAddress(host, port), CONNECT_TIMEOUT_MILLIS)
-                socket.soTimeout = READ_TIMEOUT_MILLIS
-                val connection = AdbConnection(socket, socket.getInputStream(), socket.getOutputStream())
-                if (connection.handshake(key, offerKey, promptMillis)) return connection
             } catch (e: IOException) {
                 socket.close()
                 throw e
             }
-            socket.close()
+            return open(TcpTransport(socket), key, offerKey, promptMillis)
+        }
+
+        /** As the other [open], over a [transport] already made; it is closed unless connected. */
+        fun open(transport: AdbTransport, key: AdbKey, offerKey: Boolean, promptMillis: Int): AdbConnection? {
+            try {
+                transport.timeoutMillis = READ_TIMEOUT_MILLIS
+                val connection = AdbConnection(transport)
+                if (connection.handshake(key, offerKey, promptMillis)) return connection
+            } catch (e: IOException) {
+                transport.close()
+                throw e
+            }
+            transport.close()
             return null
         }
     }

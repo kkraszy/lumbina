@@ -3,5 +3,6 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>InjectDispatcher:AndroidLocalAdb.kt:AndroidLocalAdb$IO</ID>
+    <ID>InjectDispatcher:UsbAttachedDevices.kt:UsbAttachedDevices$IO</ID>
   </CurrentIssues>
 </SmellBaseline>

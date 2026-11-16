@@ -59,6 +59,7 @@ class AdbConnectionTest {
         val key = AdbKey.loadOrCreate(folder.root)
         FakeAdbd(knownKey = key).use { adbd ->
             val connection = requireNotNull(AdbConnection.open("127.0.0.1", adbd.port, key, false, 1_000))
+            assertEquals("Fake TV", connection.model)
             assertEquals("echo:hello", connection.shell("hello", 1_000))
             connection.close()
         }
@@ -121,13 +122,27 @@ class AdbConnectionTest {
             send(AdbMessage(AdbMessage.AUTH, AdbMessage.AUTH_TOKEN, 0, token))
             val signature = AdbMessage.read(input)
             if (knownKey != null && verifies(knownKey, token, signature.data)) {
-                send(AdbMessage(AdbMessage.CNXN, AdbMessage.VERSION, 4096, "device::\u0000".toByteArray()))
+                send(
+                    AdbMessage(
+                        AdbMessage.CNXN,
+                        AdbMessage.VERSION,
+                        4096,
+                        BANNER.toByteArray(),
+                    ),
+                )
             } else {
                 send(AdbMessage(AdbMessage.AUTH, AdbMessage.AUTH_TOKEN, 0, token))
                 val offer = runCatching { AdbMessage.read(input) }.getOrNull() ?: return
                 if (offer.arg0 != AdbMessage.AUTH_RSA_PUBLIC_KEY) return
                 offered = parse(offer.data)
-                send(AdbMessage(AdbMessage.CNXN, AdbMessage.VERSION, 4096, "device::\u0000".toByteArray()))
+                send(
+                    AdbMessage(
+                        AdbMessage.CNXN,
+                        AdbMessage.VERSION,
+                        4096,
+                        BANNER.toByteArray(),
+                    ),
+                )
             }
             val open = runCatching { AdbMessage.read(input) }.getOrNull() ?: return
             val service = String(open.data).trimEnd('\u0000')
@@ -188,5 +203,9 @@ class AdbConnectionTest {
             server.close()
             worker.join(2_000)
         }
+    }
+
+    private companion object {
+        const val BANNER = "device::ro.product.name=fake;ro.product.model=Fake TV;features=shell_v2\u0000"
     }
 }

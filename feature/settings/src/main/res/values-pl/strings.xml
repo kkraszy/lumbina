@@ -545,4 +545,30 @@
     <string name="media_delete_title">Usunąć z tego urządzenia?</string>
     <string name="media_on_all_apps">„Wszystkie aplikacje”</string>
     <string name="media_on_input">kafelek źródła</string>
+
+    <!-- Devices on USB: a stick reached through its debugging. -->
+    <string name="page_attached">Urządzenia na USB</string>
+    <string name="attached_devices">Urządzenia z Androidem na USB</string>
+    <string name="attached_searching">Szukam urządzeń…</string>
+    <string name="attached_none">Na USB nie ma urządzenia z włączonym debugowaniem. Podłącz stick do portu USB tego urządzenia kablem, który przesyła dane, i włącz debugowanie USB w jego opcjach programisty.</string>
+    <string name="attached_search">Szukaj ponownie</string>
+    <string name="attached_tap_to_connect">Naciśnij OK, aby połączyć</string>
+    <string name="attached_connecting">Łączę…</string>
+    <string name="attached_prompt">Za pierwszym razem urządzenie zapyta na swoim ekranie, czy zezwolić na debugowanie: przełącz na jego wejście HDMI, zaznacz „Zawsze zezwalaj z tego komputera” i zezwól, potem wróć tutaj.</string>
+    <string name="attached_connected">Połączono</string>
+    <string name="attached_gone">Nie ma go już na USB</string>
+    <string name="attached_not_permitted">Brak zgody na użycie urządzenia USB: naciśnij OK i zezwól</string>
+    <string name="attached_not_allowed">Urządzenie nie zezwoliło na debugowanie: naciśnij OK i zezwól na jego ekranie</string>
+    <string name="attached_failed">Nie udało się połączyć: przyczyna jest w raporcie diagnostyki</string>
+    <string name="attached_apps">Aplikacje TV na urządzeniu</string>
+    <string name="attached_apps_unknown">Urządzenie nie podało listy aplikacji.</string>
+    <string name="attached_apps_none">Urządzenie nie ma aplikacji TV.</string>
+    <string name="attached_launched">Uruchomiono na urządzeniu</string>
+    <string name="attached_launch_failed">Nie udało się uruchomić</string>
+    <string name="attached_input">Źródło urządzenia</string>
+    <string name="attached_input_hint">Na nie przełączają kafelki jego aplikacji</string>
+    <string name="attached_apps_hint">OK dodaje kafelek aplikacji do Ulubionych albo go usuwa; przytrzymaj OK, aby uruchomić ją teraz na urządzeniu.</string>
+    <string name="attached_adding">Pobieram nazwę i obraz z urządzenia…</string>
+    <string name="attached_on_home">W Ulubionych</string>
+    <string name="attached_reading_name">Pobieram nazwę…</string>
 </resources>

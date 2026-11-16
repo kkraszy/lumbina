@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- A stick on a USB port is reached as its host; a device without host ports simply finds none. -->
+    <uses-feature
+        android:name="android.hardware.usb.host"
+        android:required="false" />
+</manifest>

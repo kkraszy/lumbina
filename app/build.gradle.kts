@@ -12,6 +12,9 @@ android {
         applicationId = "dev.lumbina.tv"
         versionCode = 12
         versionName = "0.0.12-pl"
+        // A development build says what it is built from after the version ("0.0.12-pl-dev.7.6f62e55"):
+        // updates compare the numbers only, so it is offered the next release, not this one again.
+        providers.gradleProperty("lumbina.versionSuffix").orNull?.let { versionName += it }
     }
 
     flavorDimensions += "services"

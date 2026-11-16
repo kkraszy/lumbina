@@ -168,4 +168,9 @@
         <item quantity="one">%d file from a phone is in the media library</item>
         <item quantity="other">%d files from a phone are in the media library</item>
     </plurals>
+
+    <!-- The tile of an app on the device on USB. -->
+    <string name="failed_stick">Couldn’t open %1$s on the device on USB</string>
+    <string name="stick_hint">Opens this app on the device on USB and switches to its input</string>
+    <string name="menu_group_stick">Device on USB</string>
 </resources>

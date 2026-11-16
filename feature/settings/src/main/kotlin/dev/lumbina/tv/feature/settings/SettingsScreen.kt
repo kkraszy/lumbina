@@ -84,6 +84,7 @@ enum class SettingsPage(val title: Int, val icon: Int) {
     Voice(R.string.settings_voice, R.drawable.ic_page_voice),
     HomeKey(R.string.page_home_key, R.drawable.ic_page_keys),
     Phone(R.string.settings_phone, R.drawable.ic_page_phone),
+    Attached(R.string.page_attached, R.drawable.ic_page_attached),
     Sleep(R.string.settings_sleep, R.drawable.ic_page_sleep),
     About(R.string.page_about, R.drawable.ic_page_about),
     Access(R.string.page_access, R.drawable.ic_page_access),
@@ -94,7 +95,7 @@ enum class SettingsPage(val title: Int, val icon: Int) {
 private enum class RootGroup(val pages: List<SettingsPage>) {
     Home(listOf(SettingsPage.Rows, SettingsPage.Widgets, SettingsPage.Channels)),
     Look(listOf(SettingsPage.Wallpaper, SettingsPage.Media, SettingsPage.Look)),
-    Input(listOf(SettingsPage.HomeKey, SettingsPage.Voice, SettingsPage.Phone)),
+    Input(listOf(SettingsPage.HomeKey, SettingsPage.Voice, SettingsPage.Phone, SettingsPage.Attached)),
     Sleep(listOf(SettingsPage.Sleep)),
     System(listOf(SettingsPage.Access, SettingsPage.State, SettingsPage.About)),
 }

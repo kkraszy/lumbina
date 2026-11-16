@@ -527,4 +527,30 @@
     <string name="media_delete_title">Delete from this device?</string>
     <string name="media_on_all_apps">“All apps”</string>
     <string name="media_on_input">an input’s tile</string>
+
+    <!-- Devices on USB: a stick reached through its debugging. -->
+    <string name="page_attached">Devices on USB</string>
+    <string name="attached_devices">Android devices on USB</string>
+    <string name="attached_searching">Looking for devices…</string>
+    <string name="attached_none">No device with debugging on is on USB. Plug the stick into this device\'s USB port with a cable that carries data, and turn on USB debugging in its developer options.</string>
+    <string name="attached_search">Look again</string>
+    <string name="attached_tap_to_connect">Press OK to connect</string>
+    <string name="attached_connecting">Connecting…</string>
+    <string name="attached_prompt">If this is the first time, the device asks on its own screen whether to allow debugging: switch to its HDMI input, tick “Always allow from this computer” and allow it, then come back here.</string>
+    <string name="attached_connected">Connected</string>
+    <string name="attached_gone">No longer on USB</string>
+    <string name="attached_not_permitted">Not allowed to use the USB device: press OK and allow it</string>
+    <string name="attached_not_allowed">The device did not allow debugging: press OK and allow it on its screen</string>
+    <string name="attached_failed">Could not connect: the diagnostics report says why</string>
+    <string name="attached_apps">TV apps on the device</string>
+    <string name="attached_apps_unknown">The device did not list its apps.</string>
+    <string name="attached_apps_none">The device has no TV apps.</string>
+    <string name="attached_launched">Opened on the device</string>
+    <string name="attached_launch_failed">Did not open</string>
+    <string name="attached_input">The device’s input</string>
+    <string name="attached_input_hint">The tiles of its apps switch to it</string>
+    <string name="attached_apps_hint">OK puts an app’s tile in Favorites or takes it out; hold OK to open it on the device now.</string>
+    <string name="attached_adding">Reading its name and picture from the device…</string>
+    <string name="attached_on_home">In Favorites</string>
+    <string name="attached_reading_name">Reading its name…</string>
 </resources>

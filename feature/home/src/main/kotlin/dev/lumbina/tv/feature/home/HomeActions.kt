@@ -29,6 +29,10 @@ class HomeActions(
     val openInput: (TileContent.InputTile) -> Unit,
     /** Holding OK on an input's tile, in the section with this id. */
     val inputMenu: (String, TileContent.InputTile) -> Unit,
+    /** OK on the tile of an app on the device on USB: opened there, and its input shown. */
+    val openStick: (TileContent.StickTile) -> Unit,
+    /** Holding OK on the tile of an app on the device on USB, in the section with this id. */
+    val stickMenu: (String, TileContent.StickTile) -> Unit,
     /** The "+" at the end of a row: the apps to tick for the section with this id. */
     val pickApps: (String) -> Unit,
     val move: (Int) -> Unit,
@@ -90,6 +94,11 @@ internal fun rememberHomeActions(
             inputMenu = { sectionId, input ->
                 viewModel.onMenuOpened()
                 menu.open(HomeDialog.InputActions(sectionId, input), Moving(sectionId, input.key))
+            },
+            openStick = viewModel::openStickApp,
+            stickMenu = { sectionId, tile ->
+                viewModel.onMenuOpened()
+                menu.open(HomeDialog.StickActions(sectionId, tile), Moving(sectionId, tile.key))
             },
             pickApps = { menu.open(HomeDialog.PickApps(it)) },
             move = { by -> moving.tile?.let { viewModel.moveItem(it.sectionId, it.key, by) } },

@@ -19,9 +19,12 @@ import dev.lumbina.tv.core.domain.backdrop.MediaKind
 import dev.lumbina.tv.core.domain.backdrop.MediaLibrary
 import dev.lumbina.tv.core.domain.backdrop.SeparateBanners
 import dev.lumbina.tv.core.domain.backdrop.toWallpaperItem
+import dev.lumbina.tv.core.domain.device.AttachedApp
+import dev.lumbina.tv.core.domain.device.AttachedDevices
 import dev.lumbina.tv.core.domain.device.DeviceProfile
 import dev.lumbina.tv.core.domain.device.InputCatalog
 import dev.lumbina.tv.core.domain.device.InputSource
+import dev.lumbina.tv.core.domain.device.launchOnAny
 import dev.lumbina.tv.core.domain.home.AppsOrder
 import dev.lumbina.tv.core.domain.home.HomeAppearance
 import dev.lumbina.tv.core.domain.home.HomeAppearanceRepository
@@ -31,6 +34,7 @@ import dev.lumbina.tv.core.domain.home.HomeLayout
 import dev.lumbina.tv.core.domain.home.HomeLayoutRepository
 import dev.lumbina.tv.core.domain.home.HomeRow
 import dev.lumbina.tv.core.domain.home.RowSpotlight
+import dev.lumbina.tv.core.domain.home.TileContent
 import dev.lumbina.tv.core.domain.home.createFolderWith
 import dev.lumbina.tv.core.domain.home.withBanner
 import dev.lumbina.tv.core.domain.phone.PhonePage
@@ -123,6 +127,15 @@ interface HomeCommands {
     /** Switches to [input] and shows it full screen; [name] as it is shown, for saying it failed. */
     fun openInput(input: String, name: String)
 
+    /** Opens [tile]'s app on the device on USB, then shows that device's input. */
+    fun openStickApp(tile: TileContent.StickTile)
+
+    /** Puts [app]'s tile in the section or takes it out of it. */
+    fun setStickApp(sectionId: String, app: HomeItem.StickApp, shown: Boolean)
+
+    /** Takes [tile] out of the section, as can be undone; [tile]'s name to say so. */
+    fun removeStickApp(sectionId: String, tile: TileContent.StickTile)
+
     fun createFolder(sectionId: String, name: String, app: App)
 
     fun addToFolder(folderId: String, app: App)
@@ -179,6 +192,7 @@ class HomeViewModel @Inject constructor(
     recentApps: RecentAppsRepository,
     profile: DeviceProfile,
     private val inputs: InputCatalog,
+    private val attached: AttachedDevices,
     spotlight: RowSpotlight,
     private val phoneLink: PhoneRemoteLink,
     private val deviceScreens: DeviceScreens,
@@ -344,6 +358,32 @@ class HomeViewModel @Inject constructor(
 
     override fun openInput(input: String, name: String) {
         viewModelScope.launch { if (!inputs.open(input)) failures.say(Failed.Input(name)) }
+    }
+
+    /**
+     * The app first, so the input shows it already starting, not the device's home before it; the
+     * input always, so the device is in sight even when the app didn't start (said on coming back).
+     */
+    override fun openStickApp(tile: TileContent.StickTile) {
+        viewModelScope.launch {
+            val app = tile.app
+            val started = attached.launchOnAny(AttachedApp(app.packageName, app.activity))
+            if (!inputs.open(app.inputId)) {
+                failures.say(Failed.Input(tile.name))
+            } else if (!started) {
+                failures.say(Failed.Stick(tile.name))
+            }
+        }
+    }
+
+    override fun setStickApp(sectionId: String, app: HomeItem.StickApp, shown: Boolean) =
+        edit { it.withStickApp(sectionId, app, shown) }
+
+    override fun removeStickApp(sectionId: String, tile: TileContent.StickTile) {
+        val section = state.value?.layout?.section(sectionId)
+        val favorites = section == null || section.isFavorites
+        val kind = if (favorites) UndoKind.OutOfFavorites else UndoKind.OutOfCategory
+        editUndoable(kind, tile.name, section?.name.orEmpty()) { it.withStickApp(sectionId, tile.app, false) }
     }
 
     /** Puts a tile being moved back where it started ([Moving.from]). */

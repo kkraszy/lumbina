@@ -136,6 +136,15 @@ sealed interface HomeDialog {
     /** The input's name and its tile's banner, as an app has. */
     data class InputNameAndBanner(val input: TileContent.InputTile) : InputDialog
 
+    /** About the tile of an app on the device on USB. */
+    sealed interface StickDialog : HomeDialog
+
+    /** The menu of the tile of an app on the device on USB, in the section with [sectionId]. */
+    data class StickActions(val sectionId: String, val tile: TileContent.StickTile) : StickDialog
+
+    /** The rows that have [tile], ticked. */
+    data class StickWhere(val tile: TileContent.StickTile) : StickDialog
+
     /** The apps to tick for one section, opened by its "+" tile. */
     data class PickApps(val sectionId: String) : HomeDialog
 
@@ -215,6 +224,8 @@ internal fun HomeDialogs(
         is HomeDialog.ShortcutDialog -> ShortcutDialogs(dialog, state, commands, menu, startMoving)
 
         is HomeDialog.InputDialog -> InputDialogs(dialog, state, commands, menu, startMoving)
+
+        is HomeDialog.StickDialog -> StickDialogs(dialog, state, commands, menu, startMoving)
     }
 }
 

@@ -100,4 +100,15 @@ class RoomHomeLayoutRepositoryTest {
         assertEquals(b, decode(b.encode()))
         assertEquals(null, decode("garbage"))
     }
+
+    @Test
+    fun `a device's app keeps its input and name, an input id with a bar included`() = runTest {
+        val stick = HomeItem.StickApp("pl.tvp.sport.tv", ".presentation.MainActivity", "hdmi|1/x")
+        repository.update { it.withStickApp(FAVORITES, stick, shown = true).nameStickApp(stick.component, "TVP Sport") }
+        val layout = repository.layout.first()
+        assertEquals(stick, layout.favorites.items.last())
+        assertEquals(mapOf(stick.component to "TVP Sport"), layout.stickNames)
+        assertEquals(emptyMap<String, String>(), layout.inputLabels)
+        assertEquals(emptyMap<AppId, String>(), layout.labels)
+    }
 }

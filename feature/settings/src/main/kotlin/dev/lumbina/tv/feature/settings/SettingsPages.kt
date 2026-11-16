@@ -27,6 +27,7 @@ import dev.lumbina.tv.core.ui.rememberServiceConsent
  * opened again shows what it last showed from its first frame), so what a page said once, about
  * something just done, is forgotten as the page is left.
  */
+@Suppress("CyclomaticComplexMethod") // one branch per page
 @Composable
 internal fun SettingsPageContent(page: SettingsPage, onPreviewScreensaver: () -> Unit, openAccess: (() -> Unit)?) {
     when (page) {
@@ -48,6 +49,8 @@ internal fun SettingsPageContent(page: SettingsPage, onPreviewScreensaver: () ->
         SettingsPage.HomeKey -> ButtonsAndKeyboard()
 
         SettingsPage.Phone -> PhonePage()
+
+        SettingsPage.Attached -> AttachedPage()
 
         SettingsPage.Sleep -> SleepPage(onPreviewScreensaver, openAccess)
 
@@ -183,6 +186,12 @@ private fun PhonePage(viewModel: PhoneRemoteViewModel = hiltViewModel()) {
         onNewKey = viewModel::newKey,
         onToggleScreensaver = viewModel::toggleOnScreensaver,
     )
+}
+
+@Composable
+private fun AttachedPage(viewModel: AttachedViewModel = hiltViewModel()) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    AttachedPanel(state = state, commands = viewModel)
 }
 
 @Composable

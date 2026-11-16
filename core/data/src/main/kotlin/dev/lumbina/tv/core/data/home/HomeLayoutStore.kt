@@ -171,9 +171,15 @@ internal fun HomeLayout.toRows(): LayoutRows {
             section.items.mapIndexed { i, item ->
                 when (item) {
                     is HomeItem.AppItem -> SectionItemEntity(section.id, i, item.app.encode(), null)
+
                     is HomeItem.Folder -> SectionItemEntity(section.id, i, null, item.id)
+
                     HomeItem.AllApps -> SectionItemEntity(section.id, i, ALL_APPS_SHORTCUT, null)
+
                     is HomeItem.Input -> SectionItemEntity(section.id, i, INPUT + item.id, null)
+
+                    is HomeItem.StickApp ->
+                        SectionItemEntity(section.id, i, STICK + item.component + STICK_INPUT + item.inputId, null)
                 }
             }
         },
@@ -183,7 +189,8 @@ internal fun HomeLayout.toRows(): LayoutRows {
         },
         hidden = hidden.map { HiddenAppEntity(it.encode()) },
         labels = labels.map { (app, label) -> AppLabelEntity(app.encode(), label) } +
-            inputLabels.map { (id, label) -> AppLabelEntity(INPUT + id, label) },
+            inputLabels.map { (id, label) -> AppLabelEntity(INPUT + id, label) } +
+            stickNames.map { (component, name) -> AppLabelEntity(STICK + component, name) },
         voiceNames = voiceNames.map { (app, name) -> AppVoiceNameEntity(app.encode(), name) },
     )
 }
@@ -231,6 +238,9 @@ internal fun LayoutRows.toLayout(): HomeLayout {
         inputLabels = labels.filter {
             it.appId.startsWith(INPUT)
         }.associate { it.appId.removePrefix(INPUT) to it.label },
+        stickNames = labels.filter {
+            it.appId.startsWith(STICK)
+        }.associate { it.appId.removePrefix(STICK) to it.label },
     )
 }
 
@@ -238,7 +248,21 @@ internal fun LayoutRows.toLayout(): HomeLayout {
 private fun markOf(value: String): HomeItem? = when {
     value == ALL_APPS_SHORTCUT -> HomeItem.AllApps
     value.startsWith(INPUT) && value.length > INPUT.length -> HomeItem.Input(value.removePrefix(INPUT))
+    value.startsWith(STICK) -> stickAppOf(value.removePrefix(STICK))
     else -> null
+}
+
+/**
+ * The device's app in `package/activity|input`: split at the first '|', which neither a package nor
+ * an activity has, while an input's id may. Null where a part is missing.
+ */
+private fun stickAppOf(value: String): HomeItem.StickApp? {
+    val component = value.substringBefore(STICK_INPUT, missingDelimiterValue = "")
+    val inputId = value.substringAfter(STICK_INPUT, missingDelimiterValue = "")
+    val packageName = component.substringBefore('/', missingDelimiterValue = "")
+    val activity = component.substringAfter('/', missingDelimiterValue = "")
+    if (packageName.isEmpty() || activity.isEmpty() || inputId.isEmpty()) return null
+    return HomeItem.StickApp(packageName, activity, inputId)
 }
 
 /** `package/fully.qualified.Activity`; unlike [AppId.flatten], always reversible. */
@@ -260,3 +284,9 @@ internal const val ALL_APPS_SHORTCUT = "${MARK}all-apps"
 
 /** What stands before an input's id in an item's app column, and in the names' table for its name. */
 internal const val INPUT = "${MARK}input:"
+
+/** What stands before an app of the device on USB in an item's app column, and in the names' table for its name. */
+internal const val STICK = "${MARK}stick:"
+
+/** Between the device's app and its input in an item's app column. */
+private const val STICK_INPUT = "|"
