@@ -18,6 +18,7 @@ import dev.lumbina.tv.core.ui.Choice
 @Composable
 fun AttachedPanel(state: AttachedUiState, commands: AttachedCommands, modifier: Modifier = Modifier) {
     SettingsColumn(modifier) {
+        Note(stringResource(R.string.attached_about))
         Header(stringResource(R.string.attached_devices))
         val devices = state.devices
         when {

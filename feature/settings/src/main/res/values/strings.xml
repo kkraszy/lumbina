@@ -530,6 +530,7 @@
 
     <!-- Devices on USB: a stick reached through its debugging. -->
     <string name="page_attached">Devices on USB</string>
+    <string name="attached_about">Here Launcher opens the apps of an Android TV stick plugged into this device: its picture comes in over HDMI, its power from a USB port. Turn on USB debugging in the stick\'s developer options and connect it below. Launcher then lists the stick\'s TV apps; an app\'s tile in Favorites opens it on the stick and switches to the stick\'s input, so you use one launcher for both.</string>
     <string name="attached_devices">Android devices on USB</string>
     <string name="attached_searching">Looking for devices…</string>
     <string name="attached_none">No device with debugging on is on USB. Plug the stick into this device\'s USB port with a cable that carries data, and turn on USB debugging in its developer options.</string>
