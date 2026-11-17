@@ -38,13 +38,14 @@ accessibility service, and any other button of the remote you choose to give som
   are shown, and you hide the rows you don't want in "Channels". An app can be taken out of
   "Continue watching" on that row's page. If the firmware has no TV provider, Lumbina installs its
   own.
-- Voice input from the remote's mic into any text field. Offline (Vosk, Russian and English),
+- Voice input from the remote's mic into any text field. Offline (Vosk: Russian, English, Polish and 20 more),
   through OpenAI or Yandex SpeechKit with your own key, or by another app on the device that
   recognizes speech for apps (experimental: on Hisense, Android 13 or newer, with debugging
   Lumbina can reach).
 - Voice search in other apps on Hisense, where the firmware gives them no microphone (Android 13
   or newer, with debugging Lumbina can reach).
-- Voice commands: open or close an app, search, volume, playback, sleep timer. Where a name fits
+- Voice commands in Russian, English and Polish: open or close an app, search, volume, playback,
+  sleep timer. Where a name fits
   several apps, they are offered to choose from. In the official YouTube for Android TV, which has
   no text field, what you say is searched there.
 - Wallpapers: your own pictures and videos, photo of the day (the last ones kept for offline),
@@ -57,9 +58,14 @@ accessibility service, and any other button of the remote you choose to give som
   the middle, with the parts you want.
 - HDMI and other inputs, where the device lets apps reach them: as tiles in any row, in the quick
   menu, and as a button in the top bar. Where the device tells, each says what is on it: the name
-  of the device working there, a cable with the device asleep, or nothing.
-- Dark and light themes with a choice of accent. Lumbina's own language can be chosen on any
-  Android it runs on, apart from the device's.
+  of the device working there, a cable with the device asleep, or nothing. On an input's screen a
+  short press of Back goes to the device there over HDMI-CEC; holding Back comes back to Lumbina.
+- An Android TV stick plugged into the HDMI and powered from the USB port: Lumbina reaches it by
+  adb (over the network, else over USB) and lists its apps in Settings → Devices on USB. An app
+  of the stick gets a tile that opens it there and switches to the stick's input.
+- Dark and light themes with a choice of accent. Lumbina speaks English, Russian and Polish, its
+  keyboard and the phone remote's page too; the language can be chosen on any Android it runs on,
+  apart from the device's.
 - Screensaver with photos and videos from the same sources as the wallpaper, from a minute idle,
   over Lumbina's own screens only, so it never covers a video. Sleep timer, auto-sleep.
 - Phone as a remote. Scan the QR code and a web page opens, nothing to install: buttons, a
@@ -70,7 +76,7 @@ accessibility service, and any other button of the remote you choose to give som
 
 ## Screenshots
 
-The interface is in Russian here; it also comes in English.
+The interface is in Russian here; it also comes in English and Polish.
 
 | | |
 |---|---|
@@ -132,7 +138,7 @@ Lumbina talks to these services directly, so each of them sees your IP:
 | [alphacephei.com](https://alphacephei.com), [huggingface.co](https://huggingface.co) | You download a speech model | Which model | Don't download |
 | [api.openai.com](https://openai.com), [stt.api.cloud.yandex.net](https://yandex.cloud/services/speechkit) | You chose cloud recognition | Audio of each phrase and your API key | Recognize on the device, it's the default |
 | Another app on the device, and whatever it sends on | You chose another app to recognize | Audio of each phrase | Recognize on the device, it's the default |
-| [api.github.com, github.com](https://github.com/Kasavy/lumbina/releases) | You check for a new version of Lumbina | The request itself; then the download | Don't check: nothing is checked by itself |
+| [api.github.com, github.com](https://github.com/kkraszy/lumbina/releases) | You check for a new version of Lumbina | The request itself; then the download | Don't check: nothing is checked by itself |
 | Whatever hosts the apps name | An app publishes channels or "continue watching" | The request for the artwork the app points to | Hide the row or the channel |
 | Wallpaper plugins | You chose a plugin as wallpaper | Whatever the plugin asks for | Pick another wallpaper |
 
